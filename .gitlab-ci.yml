@@ -10,7 +10,7 @@ rust-vulkan-build:
   # Official language image. Look for the different tagged releases at:
   # https://hub.docker.com/r/library/rust/tags/
   image: "rust:latest"
-  scirpt:
+  script:
     - cargo build
 
 # Use cargo to test the project
