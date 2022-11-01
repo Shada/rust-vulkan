@@ -1,0 +1,25 @@
+stages:
+  - build
+  - test
+
+rust-vulkan-build:
+  tags:
+    - rust
+    - vulkan
+  stage: build
+  # Official language image. Look for the different tagged releases at:
+  # https://hub.docker.com/r/library/rust/tags/
+  image: "rust:latest"
+  scirpt:
+    - cargo build
+
+# Use cargo to test the project
+test:cargo:
+  tags:
+    - rust
+    - vulkan
+  stage: test
+  image: "rust:latest"
+  script:
+    - rustc --version && cargo --version  # Print version info for debugging
+    - cargo test --workspace --verbose
