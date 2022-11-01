@@ -2,6 +2,8 @@ stages:
   - build
   - test
 
+image: "rust:latest"
+
 rust-vulkan-build:
   tags:
     - rust
