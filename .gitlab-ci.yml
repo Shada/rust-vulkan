@@ -1,8 +1,7 @@
 stages:
   - build
+  - build-release
   - test
-
-image: "rust:latest"
 
 rust-vulkan-build:
   tags:
@@ -10,9 +9,32 @@ rust-vulkan-build:
     - vulkan
   stage: build
   before_script:
+    - rustc --version && cargo --version
     - cargo clean
   script:
     - cargo build
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_ID-debug"
+    paths:
+      - target/debug/vulkan-tutorial
+    expire_in: 1 week
+
+rust-vulkan-build-release:
+  tags:
+    - rust
+    - vulkan
+  stage: build-release
+  before_script:
+    - rustc --version && cargo --version
+    - cargo clean
+  script:
+    - cargo build --release
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_ID-release"
+    paths:
+      - target/release/vulkan-tutorial
+  rules:
+    - if: $CI_COMMIT_TAG
 
 # Use cargo to test the project
 test:cargo:
@@ -20,7 +42,6 @@ test:cargo:
     - rust
     - vulkan
   stage: test
-  image: "rust:latest"
   script:
     - rustc --version && cargo --version  # Print version info for debugging
     - cargo test --workspace --verbose
