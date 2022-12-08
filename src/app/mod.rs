@@ -26,7 +26,7 @@ use std::collections::HashSet;
 use vulkanalia::vk::{ExtDebugUtilsExtension, KhrSurfaceExtension, KhrSwapchainExtension};
 
 use self::debug_callback::debug_callback;
-use self::swapchain::create_swapchain;
+use self::swapchain::{create_swapchain, create_swapchain_image_views};
 
 
 const VALIDATION_ENABLED: bool = true;
@@ -56,6 +56,7 @@ impl App {
         let device = create_logical_device(&instance, &mut data)?;
 
         create_swapchain(window, &instance, &device, &mut data)?;
+        create_swapchain_image_views(&device, &mut data)?;
 
         Ok(Self { 
             entry,
@@ -73,6 +74,9 @@ impl App {
     /// Destroys our Vulkan app.
     #[rustfmt::skip]
     pub unsafe fn destroy(&mut self) {
+        self.data.swapchain_image_views
+            .iter()
+            .for_each(|v| self.device.destroy_image_view(*v, None));
         self.device.destroy_swapchain_khr(self.data.swapchain, None);
         self.device.destroy_device(None);
         self.instance.destroy_surface_khr(self.data.surface, None);
