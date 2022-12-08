@@ -20,8 +20,10 @@ build-shaders:
     - vulkan
   extends: .setup-glslc
   script:
-    - docker run -v ${PWD}/assets/shaders:/code --rm shaderc/shaderc glslc shader.vert -o vert.spv
-    - docker run -v ${PWD}/assets/shaders:/code --rm shaderc/shaderc glslc shader.frag -o frag.spv
+    - ls -la
+    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc ls
+    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc glslc shader.vert -o vert.spv
+    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc glslc shader.frag -o frag.spv
   artifacts:
     paths:
       - assets/shaders
