@@ -5,14 +5,13 @@ stages:
   - test
 
 .setup-glslc:
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_DEPTH: 1
   tags:
     - vulkan
   before_script:
-    - rustc --version && cargo --version
-    - cargo clean
-    - git clone --depth 1 --branch v2022.4 https://github.com/google/shaderc
-    - cd shaderc
-    - docker build --rm -t shaderc/shaderc .
+    - docker build --rm -t shaderc/shaderc -f shaderc/Dockerfile shaderc
 
 build-shaders:
   stage: build-shaders
@@ -20,22 +19,23 @@ build-shaders:
     - vulkan
   extends: .setup-glslc
   script:
-    - ls -la
-    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc ls
-    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc glslc shader.vert -o vert.spv
-    - docker run --rm -v ${PWD}/assets/shaders:/code shaderc/shaderc glslc shader.frag -o frag.spv
+    - docker run --rm -u$(id -u):$(id -g) -v $PWD/assets/shaders:/code shaderc/shaderc ls -la
+    - docker run --rm -u$(id -u):$(id -g) -v $PWD/assets/shaders:/code shaderc/shaderc glslc shader.vert -o vert.spv
+    - docker run --rm -u$(id -u):$(id -g) -v $PWD/assets/shaders:/code shaderc/shaderc glslc shader.frag -o frag.spv
   artifacts:
     paths:
-      - assets/shaders
+      - assets/shaders/*.spv
 
 rust-vulkan-build:
   tags:
     - rust
     - vulkan
   stage: build
-  extends: .setup-glslc
   dependencies: 
     - build-shaders
+  before_script:
+    - rustc --version && cargo --version
+    - cargo clean
   script:
     - ls -la assets/shaders
     - cargo build
@@ -50,9 +50,11 @@ rust-vulkan-build-release:
     - rust
     - vulkan
   stage: build-release
-  extends: .setup-glslc
   dependencies: 
     - build-shaders
+  before_script:
+    - rustc --version && cargo --version
+    - cargo clean
   script:
     - cargo build --release
   artifacts:
