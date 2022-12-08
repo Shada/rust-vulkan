@@ -3,15 +3,25 @@ stages:
   - build-release
   - test
 
+.setup-glslc:
+  tags:
+    - vulkan
+  before_script:
+    - git clone --depth 1 --branch v2022.4 https://github.com/google/shaderc
+    - cd shaderc
+    - docker build -t shaderc/shaderc .
+
 rust-vulkan-build:
   tags:
     - rust
     - vulkan
   stage: build
+  extends: .setup-glslc
   before_script:
     - rustc --version && cargo --version
     - cargo clean
   script:
+    - docker run shaderc/shaderc glslc --version
     - cargo build
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_ID-debug"
@@ -24,6 +34,7 @@ rust-vulkan-build-release:
     - rust
     - vulkan
   stage: build-release
+  extends: .setup-glslc
   before_script:
     - rustc --version && cargo --version
     - cargo clean

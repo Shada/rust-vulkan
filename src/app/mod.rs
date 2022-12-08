@@ -4,6 +4,7 @@ mod physical_device;
 use physical_device::*;
 
 mod swapchain;
+mod pipeline;
 
 mod appdata;
 use appdata::*;
@@ -27,6 +28,8 @@ use vulkanalia::vk::{ExtDebugUtilsExtension, KhrSurfaceExtension, KhrSwapchainEx
 
 use self::debug_callback::debug_callback;
 use self::swapchain::{create_swapchain, create_swapchain_image_views};
+
+use self::pipeline::create_pipeline;
 
 
 const VALIDATION_ENABLED: bool = true;
@@ -57,6 +60,7 @@ impl App {
 
         create_swapchain(window, &instance, &device, &mut data)?;
         create_swapchain_image_views(&device, &mut data)?;
+        create_pipeline(&device, &mut data)?;
 
         Ok(Self { 
             entry,
