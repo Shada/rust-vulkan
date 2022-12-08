@@ -1,4 +1,5 @@
 stages:
+  - build-shaders
   - build
   - build-release
   - test
@@ -13,14 +14,28 @@ stages:
     - cd shaderc
     - docker build --rm -t shaderc/shaderc .
 
+build-shaders:
+  stage: build-shaders
+  tags:
+    - vulkan
+  extends: .setup-glslc
+  script:
+    - docker run -v ${PWD}/assets/shaders:/code --rm shaderc/shaderc glslc shader.vert -o vert.spv
+    - docker run -v ${PWD}/assets/shaders:/code --rm shaderc/shaderc glslc shader.frag -o frag.spv
+  artifacts:
+    paths:
+      - assets/shaders
+
 rust-vulkan-build:
   tags:
     - rust
     - vulkan
   stage: build
   extends: .setup-glslc
+  dependencies: 
+    - build-shaders
   script:
-    - docker run --rm shaderc/shaderc glslc --version
+    - ls -la assets/shaders
     - cargo build
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_ID-debug"
@@ -34,6 +49,8 @@ rust-vulkan-build-release:
     - vulkan
   stage: build-release
   extends: .setup-glslc
+  dependencies: 
+    - build-shaders
   script:
     - cargo build --release
   artifacts:
