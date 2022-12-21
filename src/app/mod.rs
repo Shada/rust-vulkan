@@ -4,7 +4,13 @@ mod physical_device;
 use physical_device::*;
 
 mod swapchain;
+use self::swapchain::{create_swapchain, create_swapchain_image_views};
+
+mod renderpass;
+use renderpass::create_render_pass;
+
 mod pipeline;
+use pipeline::create_pipeline;
 
 mod appdata;
 use appdata::*;
@@ -27,9 +33,7 @@ use std::collections::HashSet;
 use vulkanalia::vk::{ExtDebugUtilsExtension, KhrSurfaceExtension, KhrSwapchainExtension};
 
 use self::debug_callback::debug_callback;
-use self::swapchain::{create_swapchain, create_swapchain_image_views};
 
-use self::pipeline::create_pipeline;
 
 
 const VALIDATION_ENABLED: bool = true;
@@ -60,6 +64,8 @@ impl App {
 
         create_swapchain(window, &instance, &device, &mut data)?;
         create_swapchain_image_views(&device, &mut data)?;
+
+        create_render_pass(&instance, &device, &mut data)?;
         create_pipeline(&device, &mut data)?;
 
         Ok(Self { 
@@ -78,6 +84,8 @@ impl App {
     /// Destroys our Vulkan app.
     #[rustfmt::skip]
     pub unsafe fn destroy(&mut self) {
+        self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
+        self.device.destroy_render_pass(self.data.render_pass, None);
         self.data.swapchain_image_views
             .iter()
             .for_each(|v| self.device.destroy_image_view(*v, None));
