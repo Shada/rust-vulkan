@@ -4,10 +4,17 @@ mod physical_device;
 use physical_device::*;
 
 mod swapchain;
+use self::commands::create_command_buffers;
 use self::swapchain::{create_swapchain, create_swapchain_image_views};
+
+mod commands;
+use commands::create_command_pool;
 
 mod renderpass;
 use renderpass::create_render_pass;
+
+mod framebuffers;
+use framebuffers::create_framebuffers;
 
 mod pipeline;
 use pipeline::create_pipeline;
@@ -67,6 +74,10 @@ impl App {
 
         create_render_pass(&instance, &device, &mut data)?;
         create_pipeline(&device, &mut data)?;
+        create_framebuffers(&device, &mut data)?;
+
+        create_command_pool(&instance, &device, &mut data)?;
+        create_command_buffers(&device, &mut data)?;
 
         Ok(Self { 
             entry,
@@ -84,6 +95,10 @@ impl App {
     /// Destroys our Vulkan app.
     #[rustfmt::skip]
     pub unsafe fn destroy(&mut self) {
+        self.device.destroy_command_pool(self.data.command_pool, None);
+        self.data.framebuffers
+            .iter()
+            .for_each(|f| self.device.destroy_framebuffer(*f, None));
         self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
         self.device.destroy_render_pass(self.data.render_pass, None);
         self.data.swapchain_image_views

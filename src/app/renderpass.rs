@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use vulkanalia::{Instance, Device, vk::{self, HasBuilder, DeviceV1_0}};
+use vulkanalia::prelude::v1_0::*;
 
 use super::appdata::AppData;
 

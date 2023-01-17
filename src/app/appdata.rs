@@ -15,4 +15,7 @@ pub struct AppData {
     pub swapchain_image_views: Vec<vk::ImageView>,
     pub render_pass: vk::RenderPass, 
     pub pipeline_layout: vk::PipelineLayout,
+    pub framebuffers: Vec<vk::Framebuffer>,
+    pub command_pool: vk::CommandPool,
+    pub command_buffers: Vec<vk::CommandBuffer>,
 }
