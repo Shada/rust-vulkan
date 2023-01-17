@@ -6,17 +6,20 @@ use anyhow::{anyhow, Result, Ok};
 use crate::app::suitability_error::*;
 
 #[derive(Copy, Clone, Debug)]
-pub struct QueueFamilyIndices {
+pub struct QueueFamilyIndices 
+{
     pub graphics: u32,
     pub present: u32,
 }
 
-impl QueueFamilyIndices {
+impl QueueFamilyIndices 
+{
     pub unsafe fn get(
         instance: &Instance,
         data: &AppData,
         physical_device: vk::PhysicalDevice,
-    ) -> Result<Self> {
+    ) -> Result<Self> 
+    {
         let properties = instance
             .get_physical_device_queue_family_properties(physical_device);
 
@@ -26,20 +29,24 @@ impl QueueFamilyIndices {
             .map(|i| i as u32);
 
         let mut present = None;
-        for (index, properties) in properties.iter().enumerate() {
+        for (index, properties) in properties.iter().enumerate() 
+        {
             if instance.get_physical_device_surface_support_khr(
                 physical_device, 
                 index as u32, 
                 data.surface
-            )? {
+            )? 
+            {
                 present = Some(index as u32);
                 break;
             }
         }
 
-        if let (Some(graphics), Some(present)) = (graphics, present) {
+        if let (Some(graphics), Some(present)) = (graphics, present) 
+        {
             Ok(Self { graphics, present })
-        } else {
+        } else 
+        {
             Err(anyhow!(SuitabilityError("Missing required queue families.")))
         }
     }

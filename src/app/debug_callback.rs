@@ -10,17 +10,22 @@ pub extern "system" fn debug_callback(
     type_: vk::DebugUtilsMessageTypeFlagsEXT,
     data: *const vk::DebugUtilsMessengerCallbackDataEXT,
     _: *mut c_void,
-) -> vk::Bool32 {
+) -> vk::Bool32 
+{
     let data = unsafe { *data };
     let message = unsafe { CStr::from_ptr(data.message) }.to_string_lossy();
 
-    if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::ERROR {
+    if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::ERROR 
+    {
         error!("({:?}) {}", type_, message);
-    } else if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING {
+    } else if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING 
+    {
         warn!("({:?}) {}", type_, message);
-    } else if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::INFO {
+    } else if severity >= vk::DebugUtilsMessageSeverityFlagsEXT::INFO 
+    {
         debug!("({:?}) {}", type_, message);
-    } else {
+    } else
+    {
         trace!("({:?}) {}", type_, message);
     }
 

@@ -8,8 +8,8 @@ pub unsafe fn create_render_pass(
     instance: &Instance,
     device: &Device,
     data: &mut AppData,
-) -> Result<()> {
-
+) -> Result<()> 
+{
     let color_attachment = vk::AttachmentDescription::builder()
         .format(data.swapchain_format)
         .samples(vk::SampleCountFlags::_1)
@@ -29,11 +29,21 @@ pub unsafe fn create_render_pass(
         .pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS)
         .color_attachments(color_attachments);
 
+    let dependency = vk::SubpassDependency::builder()
+        .src_subpass(vk::SUBPASS_EXTERNAL)
+        .dst_subpass(0)
+        .src_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
+        .src_access_mask(vk::AccessFlags::empty())
+        .dst_stage_mask(vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT)
+        .dst_access_mask(vk::AccessFlags::COLOR_ATTACHMENT_WRITE);
+
     let attachments = &[color_attachment];
     let subpasses = &[subpass];
+    let dependencies = &[dependency];
     let create_info = vk::RenderPassCreateInfo::builder()
         .attachments(attachments) 
-        .subpasses(subpasses);
+        .subpasses(subpasses)
+        .dependencies(dependencies);
 
     data.render_pass = device.create_render_pass(&create_info, None)?;
     

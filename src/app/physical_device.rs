@@ -1,6 +1,7 @@
-use crate::app::appdata::*;
-
-use crate::app::queue_family_indices::*;
+use super::appdata::AppData;
+use super::queue_family_indices::QueueFamilyIndices;
+use super::swapchain::SwapChainSupport;
+use super::suitability_error::SuitabilityError;
 
 use anyhow::{anyhow, Result, Ok};
 
@@ -9,18 +10,18 @@ use vulkanalia::prelude::v1_0::*;
 use log::*;
 use std::collections::HashSet;
 
-use crate::app::suitability_error::*;
-
-use super::swapchain::SwapChainSupport;
-
-pub unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Result<()> {
+pub unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Result<()> 
+{
     
-    for physical_device in instance.enumerate_physical_devices()? {
+    for physical_device in instance.enumerate_physical_devices()? 
+    {
         let properties = instance.get_physical_device_properties(physical_device);
 
-        if let Err(error) = check_physical_device(instance, data, physical_device) {
+        if let Err(error) = check_physical_device(instance, data, physical_device) 
+        {
             warn!("Skipping physical device (`{}`): {}", properties.device_name, error);
-        } else {
+        } else 
+        {
             info!("Selected physical device (`{}`).", properties.device_name);
             data.physical_device = physical_device;
             return Ok(())
@@ -34,16 +35,19 @@ pub unsafe fn check_physical_device(
     instance: &Instance,
     data: &AppData,
     physical_device: vk::PhysicalDevice,
-) -> Result<()> {
+) -> Result<()> 
+{
     let properties = instance
         .get_physical_device_properties(physical_device);
-    if properties.device_type != vk::PhysicalDeviceType::DISCRETE_GPU {
+    if properties.device_type != vk::PhysicalDeviceType::DISCRETE_GPU 
+    {
         return Err(anyhow!(SuitabilityError("Only discrete GPUs are supported.")));
     }
 
     let features = instance
         .get_physical_device_features(physical_device);
-    if features.geometry_shader != vk::TRUE {
+    if features.geometry_shader != vk::TRUE 
+    {
         return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
     }
 
@@ -52,7 +56,8 @@ pub unsafe fn check_physical_device(
     check_physical_device_extensions(instance, physical_device)?;
 
     let support = SwapChainSupport::get(instance, data, physical_device)?;
-    if support.formats.is_empty() || support.present_modes.is_empty() {
+    if support.formats.is_empty() || support.present_modes.is_empty() 
+    {
         return Err(anyhow!(SuitabilityError("Insufficient swapchain support.")));
     }
     
@@ -64,16 +69,19 @@ pub const DEVICE_EXTENSIONS: &[vk::ExtensionName] = &[vk::KHR_SWAPCHAIN_EXTENSIO
 pub unsafe fn check_physical_device_extensions(
     instance: &Instance,
     physical_device: vk::PhysicalDevice,
-) -> Result<()> {
+) -> Result<()> 
+{
     let extensions = instance
         .enumerate_device_extension_properties(physical_device, None)?
         .iter()
         .map(|e| e.extension_name)
         .collect::<HashSet<_>>();
 
-    if DEVICE_EXTENSIONS.iter().all(|e| extensions.contains(e)) {
+    if DEVICE_EXTENSIONS.iter().all(|e| extensions.contains(e)) 
+    {
         Ok(())
-    } else {
+    } else 
+    {
         Err(anyhow!(SuitabilityError("Missing required device extensions.")))
     }
 }

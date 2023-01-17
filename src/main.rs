@@ -11,7 +11,8 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
 #[rustfmt::skip]
-fn main() -> Result<()> {
+fn main() -> Result<()> 
+{
     pretty_env_logger::init();
 
     // Window
@@ -23,16 +24,18 @@ fn main() -> Result<()> {
         .build(&event_loop)?;
 
     // App
-
     let mut app = unsafe { App::create(&window)? };
     let mut destroying = false;
-    event_loop.run(move |event, _, control_flow| {
+    event_loop.run(move |event, _, control_flow| 
+    {
         *control_flow = ControlFlow::Poll;
-        match event {
+        match event 
+        {
             // Render a frame if our Vulkan app is not being destroyed.
             Event::MainEventsCleared if !destroying => unsafe { app.render(&window) }.unwrap(),
             // Destroy our Vulkan app.
-            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+            Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => 
+            {
                 destroying = true;
                 *control_flow = ControlFlow::Exit;
                 unsafe { app.destroy(); }

@@ -3,22 +3,27 @@ use vulkanalia::prelude::v1_0::*;
 use anyhow::{ Result, Ok};
 use winit::window::Window;
 
-use super::{appdata::AppData, queue_family_indices::{QueueFamilyIndices}};
+use super::appdata::AppData; 
+use super::queue_family_indices::QueueFamilyIndices;
 
 #[derive(Clone, Debug)]
-pub struct SwapChainSupport {
+pub struct SwapChainSupport 
+{
     pub capabilities: vk::SurfaceCapabilitiesKHR,
     pub formats: Vec<vk::SurfaceFormatKHR>,
     pub present_modes: Vec<vk::PresentModeKHR>,
 }
 
-impl SwapChainSupport {
+impl SwapChainSupport 
+{
     pub unsafe fn get(
         instance: &Instance,
         data: &AppData,
         physical_device: vk::PhysicalDevice,
-    ) -> Result<Self> {
-        Ok(Self {
+    ) -> Result<Self> 
+    {
+        Ok(Self 
+        {
             capabilities: instance
                 .get_physical_device_surface_capabilities_khr(physical_device, data.surface)?,
             formats: instance
@@ -34,7 +39,8 @@ pub unsafe fn create_swapchain(
     instance: &Instance,
     device: &Device,
     data: &mut AppData,
-) -> Result<()> {
+) -> Result<()> 
+{
     let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
     let support = SwapChainSupport::get(instance, data, data.physical_device)?;
 
@@ -85,11 +91,13 @@ pub unsafe fn create_swapchain(
 pub unsafe fn create_swapchain_image_views(
     device: &Device,
     data: &mut AppData,
-) -> Result<()> {
+) -> Result<()> 
+{
     data.swapchain_image_views = data
         .swapchain_images
         .iter()
-        .map(|i| {
+        .map(|i| 
+        {
             let components = vk::ComponentMapping::builder()
                 .r(vk::ComponentSwizzle::IDENTITY)
                 .g(vk::ComponentSwizzle::IDENTITY)
@@ -119,7 +127,8 @@ pub unsafe fn create_swapchain_image_views(
 
 pub fn get_swapchain_surface_format(
     formats: &[vk::SurfaceFormatKHR],
-) -> vk::SurfaceFormatKHR {
+) -> vk::SurfaceFormatKHR 
+{
     formats
         .iter()
         .cloned()
@@ -132,7 +141,8 @@ pub fn get_swapchain_surface_format(
 
 pub fn get_swapchain_present_mode(
     present_modes: &[vk::PresentModeKHR],
-) -> vk::PresentModeKHR {
+) -> vk::PresentModeKHR 
+{
     present_modes
         .iter()
         .cloned()
@@ -145,10 +155,13 @@ pub fn get_swapchain_present_mode(
 pub fn get_swapchain_extent(
     window: &Window,
     capabilities: vk::SurfaceCapabilitiesKHR,
-) -> vk::Extent2D {
-    if capabilities.current_extent.width != u32::max_value() {
+) -> vk::Extent2D 
+{
+    if capabilities.current_extent.width != u32::max_value() 
+    {
         capabilities.current_extent
-    } else {
+    } else
+    {
         let size = window.inner_size();
         let clamp = |min: u32, max: u32, v: u32| min.max(max.min(v));
         vk::Extent2D::builder()
