@@ -24,13 +24,7 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .name(b"main\0");
 
     // Vertex Input State
-    let vertex_binding_descriptions = &[Vertex::binding_description()];
-    let vertex_attribute_descriptions = &Vertex::attribute_descriptions();
-
-    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
-        .vertex_binding_descriptions(vertex_binding_descriptions)
-        .vertex_attribute_descriptions(vertex_attribute_descriptions);
-
+    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
 
     // Input Assembly State
     let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()
@@ -96,9 +90,7 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .dynamic_states(dynamic_states);
     
     // Layout
-    let set_layouts = &[data.descriptor_set_layout];
-    let layout_info = vk::PipelineLayoutCreateInfo::builder()
-        .set_layouts(set_layouts);
+    let layout_info = vk::PipelineLayoutCreateInfo::builder();
 
     data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
     

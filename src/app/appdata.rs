@@ -22,7 +22,16 @@ pub struct AppData
     pub render_pass: vk::RenderPass, 
     pub descriptor_set_layout: vk::DescriptorSetLayout,
     pub pipeline_layout: vk::PipelineLayout,
+    pub pipeline: vk::Pipeline,
+    // Framebuffers
     pub framebuffers: Vec<vk::Framebuffer>,
+    // Command Pool
     pub command_pool: vk::CommandPool,
+    // Command Buffers
     pub command_buffers: Vec<vk::CommandBuffer>,
+    // Synchronization
+    pub image_available_semaphores: Vec<vk::Semaphore>,
+    pub render_finished_semaphores: Vec<vk::Semaphore>,
+    pub in_flight_fences: Vec<vk::Fence>,
+    pub images_in_flight: Vec<vk::Fence>,
 }

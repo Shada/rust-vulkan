@@ -4,11 +4,16 @@ use vulkanalia::prelude::v1_0::*;
 
 use super::appdata::AppData;
 
-pub unsafe fn create_framebuffers(device: &Device, data: &mut AppData) -> Result<()> {
+pub unsafe fn create_framebuffers(
+    device: &Device, 
+    data: &mut AppData
+) -> Result<()> 
+{
     data.framebuffers = data
         .swapchain_image_views
         .iter()
-        .map(|i| {
+        .map(|i| 
+        {
             let attachments = &[*i];
             let create_info = vk::FramebufferCreateInfo::builder()
                 .render_pass(data.render_pass)
