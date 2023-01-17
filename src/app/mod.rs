@@ -19,6 +19,9 @@ use sync_objects::create_sync_objects;
 mod commands;
 use commands::create_command_pool;
 
+mod commands;
+use commands::create_command_pool;
+
 mod renderpass;
 use renderpass::create_render_pass;
 
@@ -97,6 +100,9 @@ impl App
         uniform_buffer::create_descriptor_set_layout(&device, &mut data)?;
         create_pipeline(&device, &mut data)?;
         create_framebuffers(&device, &mut data)?;
+
+        create_command_pool(&instance, &device, &mut data)?;
+        create_command_buffers(&device, &mut data)?;
 
         create_command_pool(&instance, &device, &mut data)?;
 
@@ -239,75 +245,11 @@ impl App
 
     /// Destroys our Vulkan app.
     #[rustfmt::skip]
-    pub unsafe fn destroy(&mut self) 
-    {
-        self.device.device_wait_idle().unwrap();
-
-        self.destroy_swapchain();
-
-        self.device.destroy_descriptor_set_layout(self.data.descriptor_set_layout, None);
-
-        self.device.destroy_buffer(self.data.index_buffer, None);
-        self.device.free_memory(self.data.index_buffer_memory, None);
-        self.device.destroy_buffer(self.data.vertex_buffer, None);
-        self.device.free_memory(self.data.vertex_buffer_memory, None);
-
-        self.data.in_flight_fences
-            .iter()
-            .for_each(|f| self.device.destroy_fence(*f, None));
-        self.data.render_finished_semaphores
-            .iter()
-            .for_each(|s| self.device.destroy_semaphore(*s, None));
-        self.data.image_available_semaphores
-            .iter()
-            .for_each(|s| self.device.destroy_semaphore(*s, None));
+    pub unsafe fn destroy(&mut self) {
         self.device.destroy_command_pool(self.data.command_pool, None);
-        
-        self.device.destroy_device(None);
-        self.instance.destroy_surface_khr(self.data.surface, None);
-
-        if VALIDATION_ENABLED 
-        {
-            self.instance.destroy_debug_utils_messenger_ext(self.data.messenger, None);
-        }
-
-        self.instance.destroy_instance(None);
-    }
-
-    unsafe fn recreate_swapchain(&mut self, window: &Window) -> Result<()>
-    {
-        self.device.device_wait_idle()?;
-        self.destroy_swapchain();
-        create_swapchain(window, &self.instance, &self.device, &mut self.data)?;
-        create_swapchain_image_views(&self.device, &mut self.data)?;
-        create_render_pass(&self.instance, &self.device, &mut self.data)?;
-        create_pipeline(&self.device, &mut self.data)?;
-        create_framebuffers(&self.device, &mut self.data)?;
-        uniform_buffer::create_uniform_buffers(&self.instance, &self.device, &mut self.data)?;
-        uniform_buffer::create_descriptor_pool(&self.device, &mut self.data)?;
-        uniform_buffer::create_descriptor_sets(&self.device, &mut self.data)?;
-        create_command_buffers(&self.device, &mut self.data)?;
-        self.data
-            .images_in_flight
-            .resize(self.data.swapchain_images.len(), vk::Fence::null());
-        Ok(())
-    }
-
-    unsafe fn destroy_swapchain(&mut self)
-    {
-        self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
-        self.data.uniform_buffers
-            .iter()
-            .for_each(|b| self.device.destroy_buffer(*b, None));
-        self.data.uniform_buffers_memory
-            .iter()
-            .for_each(|m| self.device.free_memory(*m, None));
-        
-        self.device.free_command_buffers(self.data.command_pool, &self.data.command_buffers);
         self.data.framebuffers
             .iter()
             .for_each(|f| self.device.destroy_framebuffer(*f, None));
-        self.device.destroy_pipeline(self.data.pipeline, None);
         self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
         self.device.destroy_render_pass(self.data.render_pass, None);
         self.data.swapchain_image_views

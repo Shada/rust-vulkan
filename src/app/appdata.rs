@@ -22,25 +22,7 @@ pub struct AppData
     pub render_pass: vk::RenderPass, 
     pub descriptor_set_layout: vk::DescriptorSetLayout,
     pub pipeline_layout: vk::PipelineLayout,
-    pub pipeline: vk::Pipeline,
-    // Framebuffers
     pub framebuffers: Vec<vk::Framebuffer>,
-    // Command Pool
     pub command_pool: vk::CommandPool,
-    // Command Buffers
     pub command_buffers: Vec<vk::CommandBuffer>,
-    // Synchronization
-    pub image_available_semaphores: Vec<vk::Semaphore>,
-    pub render_finished_semaphores: Vec<vk::Semaphore>,
-    pub in_flight_fences: Vec<vk::Fence>,
-    pub images_in_flight: Vec<vk::Fence>,
-    // Buffers
-    pub vertex_buffer: vk::Buffer,
-    pub vertex_buffer_memory: vk::DeviceMemory,
-    pub index_buffer: vk::Buffer,
-    pub index_buffer_memory: vk::DeviceMemory,
-    pub uniform_buffers: Vec<vk::Buffer>,
-    pub uniform_buffers_memory: Vec<vk::DeviceMemory>,
-    pub descriptor_pool: vk::DescriptorPool,
-    pub descriptor_sets: Vec<vk::DescriptorSet>,
 }
