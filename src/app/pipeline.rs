@@ -24,7 +24,13 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .name(b"main\0");
 
     // Vertex Input State
-    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder();
+    let vertex_binding_descriptions = &[Vertex::binding_description()];
+    let vertex_attribute_descriptions = &Vertex::attribute_descriptions();
+
+    let vertex_input_state = vk::PipelineVertexInputStateCreateInfo::builder()
+        .vertex_binding_descriptions(vertex_binding_descriptions)
+        .vertex_attribute_descriptions(vertex_attribute_descriptions);
+
 
     // Input Assembly State
     let input_assembly_state = vk::PipelineInputAssemblyStateCreateInfo::builder()

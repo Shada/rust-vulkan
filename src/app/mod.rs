@@ -1,9 +1,6 @@
 mod debug_callback;
 
 mod vertices;
-mod buffer;
-
-mod uniform_buffer;
 
 mod physical_device;
 use physical_device::*;
@@ -11,13 +8,7 @@ use physical_device::*;
 mod swapchain;
 use self::commands::create_command_buffers;
 use self::swapchain::{create_swapchain, create_swapchain_image_views};
-use self::vertices::{create_vertex_buffer, create_index_buffer};
-
-mod sync_objects;
-use sync_objects::create_sync_objects;
-
-mod commands;
-use commands::create_command_pool;
+use self::vertices::create_vertex_buffer;
 
 mod sync_objects;
 use sync_objects::create_sync_objects;
@@ -97,6 +88,8 @@ impl App
         uniform_buffer::create_descriptor_set_layout(&device, &mut data)?;
         create_pipeline(&device, &mut data)?;
         create_framebuffers(&device, &mut data)?;
+
+        create_vertex_buffer(&instance, &device, &mut data)?;
 
         create_command_pool(&instance, &device, &mut data)?;
         create_command_buffers(&device, &mut data)?;
@@ -192,6 +185,9 @@ impl App
         self.device.device_wait_idle().unwrap();
 
         self.destroy_swapchain();
+
+        self.device.destroy_buffer(self.data.vertex_buffer, None);
+        self.device.free_memory(self.data.vertex_buffer_memory, None);
 
         self.data.in_flight_fences
             .iter()
