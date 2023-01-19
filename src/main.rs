@@ -26,6 +26,7 @@ fn main() -> Result<()>
     // App
     let mut app = unsafe { App::create(&window)? };
     let mut destroying = false;
+    let mut minimized = false;
     event_loop.run(move |event, _, control_flow| 
     {
         *control_flow = ControlFlow::Poll;
