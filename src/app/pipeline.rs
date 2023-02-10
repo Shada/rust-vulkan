@@ -96,7 +96,9 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .dynamic_states(dynamic_states);
     
     // Layout
-    let layout_info = vk::PipelineLayoutCreateInfo::builder();
+    let set_layouts = &[data.descriptor_set_layout];
+    let layout_info = vk::PipelineLayoutCreateInfo::builder()
+        .set_layouts(set_layouts);
 
     data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
     

@@ -1,6 +1,9 @@
 mod debug_callback;
 
 mod vertices;
+mod buffer;
+
+mod uniform_buffer;
 
 mod physical_device;
 use physical_device::*;
@@ -8,7 +11,7 @@ use physical_device::*;
 mod swapchain;
 use self::commands::create_command_buffers;
 use self::swapchain::{create_swapchain, create_swapchain_image_views};
-use self::vertices::create_vertex_buffer;
+use self::vertices::{create_vertex_buffer, create_index_buffer};
 
 mod sync_objects;
 use sync_objects::create_sync_objects;
@@ -32,6 +35,11 @@ mod queue_family_indices;
 use queue_family_indices::*;
 
 mod suitability_error;
+
+use nalgebra_glm as glm;
+
+use std::mem::size_of;
+use std::ptr::copy_nonoverlapping as memcpy;
 
 use anyhow::{anyhow, Result};
 
@@ -64,6 +72,7 @@ pub struct App
     device: Device,
     frame: usize,
     pub resized: bool,
+    start: Instant, 
 }
 
 impl App 
@@ -89,13 +98,17 @@ impl App
         create_pipeline(&device, &mut data)?;
         create_framebuffers(&device, &mut data)?;
 
-        create_vertex_buffer(&instance, &device, &mut data)?;
-
         create_command_pool(&instance, &device, &mut data)?;
+
+        create_vertex_buffer(&instance, &device, &mut data)?;
+        create_index_buffer(&instance, &device, &mut data)?;
+        uniform_buffer::create_uniform_buffers(&instance, &device, &mut data)?;
+        uniform_buffer::create_descriptor_pool(&device, &mut data)?;
+        uniform_buffer::create_descriptor_sets(&device, &mut data)?;
+
         create_command_buffers(&device, &mut data)?;
 
         create_sync_objects(&device, &mut data)?;
-
 
         Ok(Self 
         { 
@@ -105,6 +118,7 @@ impl App
             device,
             frame: 0,
             resized: false,
+            start: Instant::now(),
         })
     }
 
@@ -134,11 +148,16 @@ impl App
         if !image_in_flight.is_null() 
         {
             self.device
-                .wait_for_fences(&[image_in_flight], true, u64::max_value())?;
+                .wait_for_fences(
+                    &[image_in_flight], 
+                    true, 
+                    u64::max_value())?;
         }
 
         self.data.images_in_flight[image_index as usize] = in_flight_fence;
         
+        self.update_uniform_buffer(image_index)?;
+
         //Submit command buffer
         let wait_semaphores = &[self.data.image_available_semaphores[self.frame]];
         let wait_stages = &[vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
@@ -178,6 +197,46 @@ impl App
         Ok(())
     }
 
+    // TODO: move to uniform_buffers.rs
+    unsafe fn update_uniform_buffer(&self, image_index: usize) -> Result<()>
+    {
+        let time = self.start.elapsed().as_secs_f32();
+
+        let model = glm::rotate(
+            &glm::identity(),
+            time * glm::radians(&glm::vec1(90.0))[0],
+            &glm::vec3(0.0,0.0,1.0),
+        );
+
+        let view = glm::look_at(
+            &glm::vec3(2.0, 2.0, 2.0), 
+            &glm::vec3(0.0, 0.0, 0.0), 
+            &glm::vec3(0.0, 0.0, 1.0),
+        );
+
+        let mut proj = glm::perspective(
+            self.data.swapchain_extent.width as f32 / self.data.swapchain_extent.height as f32, 
+            glm::radians(&glm::vec1(45.0))[0], 
+            0.1, 
+            10.0,
+        );
+        proj[(1, 1)] *= -1.0;
+
+        let ubo = uniform_buffer::UniformBufferObject { model, view, proj };
+
+        let memory = self.device.map_memory(
+            self.data.uniform_buffers_memory[image_index], 
+            0, 
+            size_of::<uniform_buffer::UniformBufferObject>() as u64, 
+            vk::MemoryMapFlags::empty(),
+        )?;
+
+        memcpy(&ubo, memory.cast(), 1);
+
+        self.device.unmap_memory(self.data.uniform_buffers_memory[image_index]);
+        Ok(())
+    }
+
     /// Destroys our Vulkan app.
     #[rustfmt::skip]
     pub unsafe fn destroy(&mut self) 
@@ -186,6 +245,10 @@ impl App
 
         self.destroy_swapchain();
 
+        self.device.destroy_descriptor_set_layout(self.data.descriptor_set_layout, None);
+
+        self.device.destroy_buffer(self.data.index_buffer, None);
+        self.device.free_memory(self.data.index_buffer_memory, None);
         self.device.destroy_buffer(self.data.vertex_buffer, None);
         self.device.free_memory(self.data.vertex_buffer_memory, None);
 
@@ -220,6 +283,9 @@ impl App
         create_render_pass(&self.instance, &self.device, &mut self.data)?;
         create_pipeline(&self.device, &mut self.data)?;
         create_framebuffers(&self.device, &mut self.data)?;
+        uniform_buffer::create_uniform_buffers(&self.instance, &self.device, &mut self.data)?;
+        uniform_buffer::create_descriptor_pool(&self.device, &mut self.data)?;
+        uniform_buffer::create_descriptor_sets(&self.device, &mut self.data)?;
         create_command_buffers(&self.device, &mut self.data)?;
         self.data
             .images_in_flight
@@ -229,6 +295,14 @@ impl App
 
     unsafe fn destroy_swapchain(&mut self)
     {
+        self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
+        self.data.uniform_buffers
+            .iter()
+            .for_each(|b| self.device.destroy_buffer(*b, None));
+        self.data.uniform_buffers_memory
+            .iter()
+            .for_each(|m| self.device.free_memory(*m, None));
+        
         self.device.free_command_buffers(self.data.command_pool, &self.data.command_buffers);
         self.data.framebuffers
             .iter()

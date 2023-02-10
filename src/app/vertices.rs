@@ -9,15 +9,20 @@ use super::appdata::AppData;
 
 use anyhow::{Result, anyhow};
 
+use super::buffer::*;
+
 lazy_static!
 {
     pub static ref VERTICES: Vec<Vertex> = vec!
     [
-        Vertex::new(glm::vec2(0.0, -0.5), glm::vec3(1.0, 0.0, 0.0)),
-        Vertex::new(glm::vec2(0.5,  0.5), glm::vec3(0.0, 1.0, 0.0)),
+        Vertex::new(glm::vec2(-0.5, -0.5), glm::vec3(1.0, 0.0, 0.0)),
+        Vertex::new(glm::vec2(0.5,  -0.5), glm::vec3(0.0, 1.0, 0.0)),
+        Vertex::new(glm::vec2(0.5, 0.5), glm::vec3(0.0, 0.0, 1.0)),
         Vertex::new(glm::vec2(-0.5, 0.5), glm::vec3(1.0, 1.0, 1.0)),
     ];
 }
+
+pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -74,42 +79,112 @@ pub unsafe fn create_vertex_buffer(
     data: &mut AppData,
 ) -> Result<()>
 {
-    // Buffer
-    let buffer_info = vk::BufferCreateInfo::builder()
-        .size((size_of::<Vertex>() * VERTICES.len()) as u64)
-        .usage(vk::BufferUsageFlags::VERTEX_BUFFER)
-        .sharing_mode(vk::SharingMode::EXCLUSIVE);
+    // Create Staging buffer
 
-    data.vertex_buffer = device.create_buffer(&buffer_info, None)?;
+    let size = (size_of::<Vertex>() * VERTICES.len()) as u64;
 
-    // Memory 
-    let requirements = device.get_buffer_memory_requirements(data.vertex_buffer);
+    let (staging_buffer, staging_buffer_memory) = create_buffer(
+        instance, 
+        device, 
+        data, 
+        size, 
+        vk::BufferUsageFlags::TRANSFER_SRC, 
+        vk::MemoryPropertyFlags::HOST_COHERENT | vk::MemoryPropertyFlags::HOST_VISIBLE,
+    )?;
 
-    let memory_info = vk::MemoryAllocateInfo::builder()
-        .allocation_size(requirements.size)
-        .memory_type_index(get_memory_type_index(
-            instance, 
-            data, 
-            vk::MemoryPropertyFlags::HOST_COHERENT | vk::MemoryPropertyFlags::HOST_VISIBLE, 
-            requirements,
-        )?);
-
-    data.vertex_buffer_memory = device.allocate_memory(&memory_info, None)?;
-
-    device.bind_buffer_memory(data.vertex_buffer, data.vertex_buffer_memory, 0)?;
-
-    // Copy data
+    // Copy data (staging)
     let memory = device.map_memory(
-        data.vertex_buffer_memory, 
+        staging_buffer_memory, 
         0, 
-        buffer_info.size, 
+        size, 
         vk::MemoryMapFlags::empty(),
     )?;
 
     memcpy(VERTICES.as_ptr(), memory.cast(), VERTICES.len());
 
-    device.unmap_memory(data.vertex_buffer_memory);
+    device.unmap_memory(staging_buffer_memory);
+
+    // Create Vertex buffer
+
+    let (vertex_buffer, vertex_buffer_memory) = create_buffer(
+        instance, 
+        device, 
+        data, 
+        size, 
+        vk::BufferUsageFlags::TRANSFER_DST | vk::BufferUsageFlags::VERTEX_BUFFER, 
+        vk::MemoryPropertyFlags::DEVICE_LOCAL,
+    )?;
+
+    data.vertex_buffer = vertex_buffer;
+    data.vertex_buffer_memory = vertex_buffer_memory;
+
+    // Copy (Vertex)
     
+    copy_buffer(device, data, staging_buffer, vertex_buffer, size)?;
+
+    // Cleanup
+
+    device.destroy_buffer(staging_buffer, None);
+    device.free_memory(staging_buffer_memory, None);
+
+    Ok(())
+}
+
+
+pub unsafe fn create_index_buffer(
+    instance: &Instance,
+    device: &Device,
+    data: &mut AppData,
+) -> Result<()>
+{
+    // Create Staging buffer
+
+    let size = (size_of::<u16>() * INDICES.len()) as u64;
+
+    let (staging_buffer, staging_buffer_memory) = create_buffer(
+        instance, 
+        device, 
+        data, 
+        size, 
+        vk::BufferUsageFlags::TRANSFER_SRC, 
+        vk::MemoryPropertyFlags::HOST_COHERENT | vk::MemoryPropertyFlags::HOST_VISIBLE,
+    )?;
+
+    // Copy data (staging)
+    let memory = device.map_memory(
+        staging_buffer_memory, 
+        0, 
+        size, 
+        vk::MemoryMapFlags::empty(),
+    )?;
+
+    memcpy(INDICES.as_ptr(), memory.cast(), INDICES.len());
+
+    device.unmap_memory(staging_buffer_memory);
+
+    // Create Index buffer
+
+    let (index_buffer, index_buffer_memory) = create_buffer(
+        instance, 
+        device, 
+        data, 
+        size, 
+        vk::BufferUsageFlags::TRANSFER_DST | vk::BufferUsageFlags::INDEX_BUFFER, 
+        vk::MemoryPropertyFlags::DEVICE_LOCAL,
+    )?;
+
+    data.index_buffer = index_buffer;
+    data.index_buffer_memory = index_buffer_memory;
+
+    // Copy (Index)
+    
+    copy_buffer(device, data, staging_buffer, index_buffer, size)?;
+
+    // Cleanup
+
+    device.destroy_buffer(staging_buffer, None);
+    device.free_memory(staging_buffer_memory, None);
+
     Ok(())
 }
 
