@@ -43,4 +43,7 @@ pub struct AppData
     pub uniform_buffers_memory: Vec<vk::DeviceMemory>,
     pub descriptor_pool: vk::DescriptorPool,
     pub descriptor_sets: Vec<vk::DescriptorSet>,
+    // Texture
+    pub texture_image: vk::Image,
+    pub texture_image_memory: vk::DeviceMemory,
 }

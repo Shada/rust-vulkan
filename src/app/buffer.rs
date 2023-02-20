@@ -1,7 +1,7 @@
 
 use vulkanalia::prelude::v1_0::*;
 
-use super::{appdata::AppData, vertices::get_memory_type_index};
+use super::{appdata::AppData, vertices::get_memory_type_index, commands::{begin_single_time_commands, end_single_time_commands}};
 
 use anyhow::{Result, Ok};
 
@@ -47,39 +47,12 @@ pub unsafe fn copy_buffer(
     size: vk::DeviceSize,
 ) -> Result<()>
 {
-    // Allocate 
-
-    let allocate_info = vk::CommandBufferAllocateInfo::builder()
-        .level(vk::CommandBufferLevel::PRIMARY)
-        .command_pool(data.command_pool)
-        .command_buffer_count(1);
-
-    let command_buffer = device.allocate_command_buffers(&allocate_info)?[0];
-
-    // Commands
-
-    let begin_info = vk::CommandBufferBeginInfo::builder()
-        .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT);
-        
-    device.begin_command_buffer(command_buffer, &begin_info)?;
+    let command_buffer = begin_single_time_commands(device, data)?;
 
     let regions = vk::BufferCopy::builder().size(size);
     device.cmd_copy_buffer(command_buffer, source, destination, &[regions]);
 
-    device.end_command_buffer(command_buffer)?;
-
-    // Submit
-
-    let command_buffers = &[command_buffer];
-    let submit_info = vk::SubmitInfo::builder()
-        .command_buffers(command_buffers);
-
-    device.queue_submit(data.graphics_queue, &[submit_info], vk::Fence::null())?;
-    device.queue_wait_idle(data.graphics_queue)?;
-
-    // Cleanup
-    
-    device.free_command_buffers(data.command_pool, &[command_buffer]);
+    end_single_time_commands(device, data, command_buffer)?;
 
     Ok(())
 }

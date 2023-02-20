@@ -5,6 +5,9 @@ mod buffer;
 
 mod uniform_buffer;
 
+mod texture;
+use texture::*;
+
 mod physical_device;
 use physical_device::*;
 
@@ -99,6 +102,7 @@ impl App
         create_framebuffers(&device, &mut data)?;
 
         create_command_pool(&instance, &device, &mut data)?;
+        create_texture_image(&instance, &device, &mut data)?;
 
         create_vertex_buffer(&instance, &device, &mut data)?;
         create_index_buffer(&instance, &device, &mut data)?;
@@ -244,6 +248,9 @@ impl App
         self.device.device_wait_idle().unwrap();
 
         self.destroy_swapchain();
+
+        self.device.destroy_image(self.data.texture_image, None);
+        self.device.free_memory(self.data.texture_image_memory, None);
 
         self.device.destroy_descriptor_set_layout(self.data.descriptor_set_layout, None);
 
