@@ -103,6 +103,8 @@ impl App
 
         create_command_pool(&instance, &device, &mut data)?;
         create_texture_image(&instance, &device, &mut data)?;
+        create_texture_image_view(&device, &mut data)?;
+        create_texture_sampler(&device, &mut data)?;
 
         create_vertex_buffer(&instance, &device, &mut data)?;
         create_index_buffer(&instance, &device, &mut data)?;
@@ -249,6 +251,8 @@ impl App
 
         self.destroy_swapchain();
 
+        self.device.destroy_sampler(self.data.texture_sampler, None);
+        self.device.destroy_image_view(self.data.texture_image_view, None);
         self.device.destroy_image(self.data.texture_image, None);
         self.device.free_memory(self.data.texture_image_memory, None);
 
@@ -441,7 +445,8 @@ unsafe fn create_logical_device(
         .map(|n| n.as_ptr())
         .collect::<Vec<_>>();
 
-    let features = vk::PhysicalDeviceFeatures::builder();
+    let features = vk::PhysicalDeviceFeatures::builder()
+        .sampler_anisotropy(true);
 
     let info = vk::DeviceCreateInfo::builder()
         .queue_create_infos(&queue_infos)

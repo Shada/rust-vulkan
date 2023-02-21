@@ -46,4 +46,6 @@ pub struct AppData
     // Texture
     pub texture_image: vk::Image,
     pub texture_image_memory: vk::DeviceMemory,
+    pub texture_image_view: vk::ImageView,
+    pub texture_sampler: vk::Sampler,
 }

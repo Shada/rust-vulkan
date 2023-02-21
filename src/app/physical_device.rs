@@ -46,9 +46,13 @@ pub unsafe fn check_physical_device(
 
     let features = instance
         .get_physical_device_features(physical_device);
-    if features.geometry_shader != vk::TRUE 
+    //if features.geometry_shader != vk::TRUE 
+    //{
+    //    return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
+    //}
+    if features.sampler_anisotropy != vk::TRUE
     {
-        return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
+        return Err(anyhow!(SuitabilityError("No sampler anisotropy!")));
     }
 
     QueueFamilyIndices::get(instance, data, physical_device)?;
