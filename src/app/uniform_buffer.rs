@@ -54,8 +54,14 @@ pub unsafe fn create_descriptor_set_layout(
         .descriptor_type(vk::DescriptorType::UNIFORM_BUFFER)
         .descriptor_count(1)
         .stage_flags(vk::ShaderStageFlags::VERTEX);
+
+    let sampler_binding = vk::DescriptorSetLayoutBinding::builder()
+        .binding(1)
+        .descriptor_type(vk::DescriptorType::COMBINED_IMAGE_SAMPLER)
+        .descriptor_count(1)
+        .stage_flags(vk::ShaderStageFlags::FRAGMENT);
     
-    let bindings = &[ubo_binding];
+    let bindings = &[ubo_binding, sampler_binding];
     let create_info = vk::DescriptorSetLayoutCreateInfo::builder()
         .bindings(bindings);
     
@@ -69,8 +75,12 @@ pub unsafe fn create_descriptor_pool(device: &Device, data: &mut AppData) -> Res
     let ubo_size = vk::DescriptorPoolSize::builder()
         .type_(vk::DescriptorType::UNIFORM_BUFFER)
         .descriptor_count(data.swapchain_images.len() as u32);
+
+    let sampler_size = vk::DescriptorPoolSize::builder()
+        .type_(vk::DescriptorType::COMBINED_IMAGE_SAMPLER)
+        .descriptor_count(data.swapchain_images.len() as u32);
     
-    let pool_sizes = &[ubo_size];
+    let pool_sizes = &[ubo_size, sampler_size];
     let create_info = vk::DescriptorPoolCreateInfo::builder()
         .pool_sizes(pool_sizes)
         .max_sets(data.swapchain_images.len() as u32);
@@ -104,7 +114,23 @@ pub unsafe fn create_descriptor_sets(device: &Device, data: &mut AppData)
             .descriptor_type(vk::DescriptorType::UNIFORM_BUFFER)
             .buffer_info(buffer_info);
 
-        device.update_descriptor_sets(&[ubo_write], &[] as &[vk::CopyDescriptorSet]);
+        let info = vk::DescriptorImageInfo::builder()
+            .image_layout(vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL)
+            .image_view(data.texture_image_view)
+            .sampler(data.texture_sampler);
+
+        let image_info = &[info];
+        let sampler_write = vk::WriteDescriptorSet::builder()
+            .dst_set(data.descriptor_sets[i])
+            .dst_binding(1)
+            .dst_array_element(0)
+            .descriptor_type(vk::DescriptorType::COMBINED_IMAGE_SAMPLER)
+            .image_info(image_info);
+
+        device.update_descriptor_sets(
+            &[ubo_write, sampler_write], 
+            &[] as &[vk::CopyDescriptorSet]
+        );
     }
     Ok(())
 }
