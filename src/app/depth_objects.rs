@@ -19,6 +19,7 @@ pub unsafe fn create_depth_objects(
         data,   
         data.swapchain_extent.width, 
         data.swapchain_extent.height, 
+        1,
         format, 
         vk::ImageTiling::OPTIMAL, 
         vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT, 
@@ -32,18 +33,10 @@ pub unsafe fn create_depth_objects(
         device, 
         data.depth_image, 
         format, 
-        vk::ImageAspectFlags::DEPTH
+        vk::ImageAspectFlags::DEPTH,
+        1,
     )?;
 
-    super::texture::transition_image_layout(
-        device,
-        data,
-        data.depth_image,
-        format,
-        vk::ImageLayout::UNDEFINED,
-        vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-    )?;
-    
     Ok(())
 }
 
