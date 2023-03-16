@@ -15,27 +15,35 @@ lazy_static!
 {
     pub static ref VERTICES: Vec<Vertex> = vec!
     [
-        Vertex::new(glm::vec2(-0.5, -0.5),  glm::vec3(1.0, 0.0, 0.0), glm::vec2(1.0, 0.0)),
-        Vertex::new(glm::vec2(0.5,  -0.5),  glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 0.0)),
-        Vertex::new(glm::vec2(0.5, 0.5),    glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
-        Vertex::new(glm::vec2(-0.5, 0.5),   glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
+        Vertex::new(glm::vec3(-0.5, -0.5, 0.0),  glm::vec3(1.0, 0.0, 0.0), glm::vec2(1.0, 0.0)),
+        Vertex::new(glm::vec3(0.5,  -0.5, 0.0),  glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 0.0)),
+        Vertex::new(glm::vec3(0.5, 0.5, 0.0),    glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
+        Vertex::new(glm::vec3(-0.5, 0.5, 0.0),   glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
+
+        Vertex::new(glm::vec3(-0.5, -0.5, -0.5),  glm::vec3(1.0, 0.0, 0.0), glm::vec2(1.0, 0.0)),
+        Vertex::new(glm::vec3(0.5,  -0.5, -0.5),  glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 0.0)),
+        Vertex::new(glm::vec3(0.5, 0.5, -0.5),    glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
+        Vertex::new(glm::vec3(-0.5, 0.5, -0.5),   glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
     ];
 }
 
-pub const INDICES: &[u16] = &[0, 1, 2, 2, 3, 0];
+pub const INDICES: &[u16] = &[
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4
+    ];
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex
 {
-    position: glm::Vec2,
+    position: glm::Vec3,
     colour: glm::Vec3,
     tex_coord: glm::Vec2,
 }
 
 impl Vertex
 {
-    fn new(position: glm::Vec2, colour: glm::Vec3, tex_coord: glm::Vec2) -> Self
+    fn new(position: glm::Vec3, colour: glm::Vec3, tex_coord: glm::Vec2) -> Self
     {
         Self
         {
@@ -59,7 +67,7 @@ impl Vertex
         let position = vk::VertexInputAttributeDescription::builder()
             .binding(0)
             .location(0)
-            .format(vk::Format::R32G32_SFLOAT)
+            .format(vk::Format::R32G32B32_SFLOAT)
             .offset(0)
             .build();
 
@@ -67,14 +75,14 @@ impl Vertex
             .binding(0)
             .location(1)
             .format(vk::Format::R32G32B32_SFLOAT)
-            .offset(size_of::<glm::Vec2>() as u32)
+            .offset(size_of::<glm::Vec3>() as u32)
             .build();
 
         let tex_coord = vk::VertexInputAttributeDescription::builder()
             .binding(0)
             .location(2)
             .format(vk::Format::R32G32_SFLOAT)
-            .offset((size_of::<glm::Vec2>() + size_of::<glm::Vec3>()) as u32)
+            .offset((size_of::<glm::Vec3>() + size_of::<glm::Vec3>()) as u32)
             .build();
         
         [position, colour, tex_coord]

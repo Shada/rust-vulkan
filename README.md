@@ -4,4 +4,4 @@ I'm just following the guide at https://kylemayes.github.io/vulkanalia
 
 ## Progress
 
-Finished chapter [30. Combined image sampler](https://kylemayes.github.io/vulkanalia/texture/combined_image_sampler.html)
+Finished chapter [31. Depth buffering](https://kylemayes.github.io/vulkanalia/model/depth_buffering.html)

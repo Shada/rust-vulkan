@@ -66,8 +66,17 @@ unsafe fn record_command_buffers(
                 float32: [0.0, 0.0, 0.0, 1.0],
             },
         };
-    
-        let clear_values = &[color_clear_value];
+
+        let depth_clear_value = vk::ClearValue
+        {
+            depth_stencil: vk::ClearDepthStencilValue
+            {
+                depth: 1.0,
+                stencil: 0,
+            },
+        };
+
+        let clear_values = &[color_clear_value, depth_clear_value];
         let render_pass_begin = vk::RenderPassBeginInfo::builder()
             .render_pass(data.render_pass)
             .framebuffer(data.framebuffers[i])

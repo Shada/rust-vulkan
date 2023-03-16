@@ -1,10 +1,11 @@
-use std::mem::size_of;
+use std::{mem::size_of, time::Instant};
 
 use nalgebra_glm as glm;
 
 use vulkanalia::prelude::v1_0::*;
 
 use anyhow::{Ok, Result};
+use std::ptr::copy_nonoverlapping as memcpy;
 
 use super::{appdata::AppData, buffer::create_buffer};
 
@@ -15,6 +16,46 @@ pub struct UniformBufferObject
     pub model: glm::Mat4,
     pub view: glm::Mat4,
     pub proj: glm::Mat4,
+}
+
+pub unsafe fn update_uniform_buffer(image_index: usize, start: &Instant, data: &AppData, device: &Device) -> Result<()>
+{
+    let time = start.elapsed().as_secs_f32();
+
+    let model = glm::rotate(
+        &glm::identity(),
+        time * glm::radians(&glm::vec1(90.0))[0],
+        &glm::vec3(0.0,0.0,1.0),
+    );
+
+    let view = glm::look_at(
+        &glm::vec3(2.0, 2.0, 2.0), 
+        &glm::vec3(0.0, 0.0, 0.0), 
+        &glm::vec3(0.0, 0.0, 1.0),
+    );
+
+    let mut proj = glm::perspective_rh_zo(
+        data.swapchain_extent.width as f32 / data.swapchain_extent.height as f32, 
+        glm::radians(&glm::vec1(45.0))[0], 
+        0.1, 
+        10.0,
+    );
+    proj[(1, 1)] *= -1.0;
+
+    let ubo = UniformBufferObject { model, view, proj };
+
+    let memory = device.map_memory(
+        data.uniform_buffers_memory[image_index], 
+        0, 
+        size_of::<UniformBufferObject>() as u64, 
+        vk::MemoryMapFlags::empty(),
+    )?;
+
+    memcpy(&ubo, memory.cast(), 1);
+
+    device.unmap_memory(data.uniform_buffers_memory[image_index]);
+
+    Ok(())
 }
 
 pub unsafe fn create_uniform_buffers(

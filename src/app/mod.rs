@@ -1,64 +1,32 @@
-mod debug_callback;
-
-mod vertices;
-mod buffer;
-
-mod uniform_buffer;
-
-mod texture;
-use texture::*;
-
-mod physical_device;
-use physical_device::*;
-
-mod swapchain;
-use self::commands::create_command_buffers;
-use self::swapchain::{create_swapchain, create_swapchain_image_views};
-use self::vertices::{create_vertex_buffer, create_index_buffer};
-
-mod sync_objects;
-use sync_objects::create_sync_objects;
-
-mod commands;
-use commands::create_command_pool;
-
-mod renderpass;
-use renderpass::create_render_pass;
-
-mod framebuffers;
-use framebuffers::create_framebuffers;
-
-mod pipeline;
-use pipeline::create_pipeline;
-
-mod appdata;
-use appdata::*;
-
-mod queue_family_indices;
-use queue_family_indices::*;
-
-mod suitability_error;
-
-use nalgebra_glm as glm;
-
-use std::mem::size_of;
-use std::ptr::copy_nonoverlapping as memcpy;
 
 use anyhow::{anyhow, Result};
-
-use vulkanalia::loader::{LibloadingLoader, LIBRARY};
-use vulkanalia::window as vk_window;
-use vulkanalia::prelude::v1_0::*;
-
-use winit::window::Window;
 
 use std::collections::HashSet;
 use std::time::Instant;
 
+use vulkanalia::loader::{LibloadingLoader, LIBRARY};
+use vulkanalia::window as vk_window;
 use vulkanalia::vk::{ExtDebugUtilsExtension, KhrSurfaceExtension, KhrSwapchainExtension};
+use vulkanalia::prelude::v1_0::*;
 
-use self::debug_callback::debug_callback;
+use winit::window::Window;
 
+mod appdata;
+mod buffer;
+mod commands;
+mod debug_callback;
+mod depth_objects;
+mod framebuffers;
+mod physical_device;
+mod pipeline;
+mod renderpass;
+mod suitability_error;
+mod swapchain;
+mod sync_objects;
+mod texture;
+mod uniform_buffer;
+mod vertices;
+mod queue_family_indices;
 
 const MAX_FRAMES_IN_FLIGHT: usize = 2;
 const VALIDATION_ENABLED: bool = true;
@@ -71,7 +39,7 @@ pub struct App
 {
     entry: Entry,
     instance: Instance,
-    data: AppData,
+    data: appdata::AppData,
     device: Device,
     frame: usize,
     pub resized: bool,
@@ -85,36 +53,39 @@ impl App
     {
         let loader = LibloadingLoader::new(LIBRARY)?;
         let entry = Entry::new(loader).map_err(|b| anyhow!("{}", b))?;
-        let mut data = AppData::default();
+        let mut data = appdata::AppData::default();
         let instance = create_instance(window, &entry, &mut data)?;
         data.surface = vk_window::create_surface(&instance, window)?;
 
-        pick_physical_device(&instance, &mut data)?;
+        physical_device::pick_physical_device(&instance, &mut data)?;
 
         let device = create_logical_device(&instance, &mut data)?;
 
-        create_swapchain(window, &instance, &device, &mut data)?;
-        create_swapchain_image_views(&device, &mut data)?;
+        swapchain::create_swapchain(window, &instance, &device, &mut data)?;
+        swapchain::create_swapchain_image_views(&device, &mut data)?;
 
-        create_render_pass(&instance, &device, &mut data)?;
+        renderpass::create_render_pass(&instance, &device, &mut data)?;
         uniform_buffer::create_descriptor_set_layout(&device, &mut data)?;
-        create_pipeline(&device, &mut data)?;
-        create_framebuffers(&device, &mut data)?;
+        pipeline::create_pipeline(&device, &mut data)?;
 
-        create_command_pool(&instance, &device, &mut data)?;
-        create_texture_image(&instance, &device, &mut data)?;
-        create_texture_image_view(&device, &mut data)?;
-        create_texture_sampler(&device, &mut data)?;
+        commands::create_command_pool(&instance, &device, &mut data)?;
+        
+        depth_objects::create_depth_objects(&instance, &device, &mut data)?;
+        framebuffers::create_framebuffers(&device, &mut data)?;
 
-        create_vertex_buffer(&instance, &device, &mut data)?;
-        create_index_buffer(&instance, &device, &mut data)?;
+        texture::create_texture_image(&instance, &device, &mut data)?;
+        texture::create_texture_image_view(&device, &mut data)?;
+        texture::create_texture_sampler(&device, &mut data)?;
+
+        vertices::create_vertex_buffer(&instance, &device, &mut data)?;
+        vertices::create_index_buffer(&instance, &device, &mut data)?;
         uniform_buffer::create_uniform_buffers(&instance, &device, &mut data)?;
         uniform_buffer::create_descriptor_pool(&device, &mut data)?;
         uniform_buffer::create_descriptor_sets(&device, &mut data)?;
 
-        create_command_buffers(&device, &mut data)?;
+        commands::create_command_buffers(&device, &mut data)?;
 
-        create_sync_objects(&device, &mut data)?;
+        sync_objects::create_sync_objects(&device, &mut data)?;
 
         Ok(Self 
         { 
@@ -162,7 +133,7 @@ impl App
 
         self.data.images_in_flight[image_index as usize] = in_flight_fence;
         
-        self.update_uniform_buffer(image_index)?;
+        uniform_buffer::update_uniform_buffer(image_index, &self.start, &self.data, &self.device)?;
 
         //Submit command buffer
         let wait_semaphores = &[self.data.image_available_semaphores[self.frame]];
@@ -200,46 +171,6 @@ impl App
 
         self.frame = (self.frame + 1) % MAX_FRAMES_IN_FLIGHT; 
 
-        Ok(())
-    }
-
-    // TODO: move to uniform_buffers.rs
-    unsafe fn update_uniform_buffer(&self, image_index: usize) -> Result<()>
-    {
-        let time = self.start.elapsed().as_secs_f32();
-
-        let model = glm::rotate(
-            &glm::identity(),
-            time * glm::radians(&glm::vec1(90.0))[0],
-            &glm::vec3(0.0,0.0,1.0),
-        );
-
-        let view = glm::look_at(
-            &glm::vec3(2.0, 2.0, 2.0), 
-            &glm::vec3(0.0, 0.0, 0.0), 
-            &glm::vec3(0.0, 0.0, 1.0),
-        );
-
-        let mut proj = glm::perspective(
-            self.data.swapchain_extent.width as f32 / self.data.swapchain_extent.height as f32, 
-            glm::radians(&glm::vec1(45.0))[0], 
-            0.1, 
-            10.0,
-        );
-        proj[(1, 1)] *= -1.0;
-
-        let ubo = uniform_buffer::UniformBufferObject { model, view, proj };
-
-        let memory = self.device.map_memory(
-            self.data.uniform_buffers_memory[image_index], 
-            0, 
-            size_of::<uniform_buffer::UniformBufferObject>() as u64, 
-            vk::MemoryMapFlags::empty(),
-        )?;
-
-        memcpy(&ubo, memory.cast(), 1);
-
-        self.device.unmap_memory(self.data.uniform_buffers_memory[image_index]);
         Ok(())
     }
 
@@ -289,15 +220,16 @@ impl App
     {
         self.device.device_wait_idle()?;
         self.destroy_swapchain();
-        create_swapchain(window, &self.instance, &self.device, &mut self.data)?;
-        create_swapchain_image_views(&self.device, &mut self.data)?;
-        create_render_pass(&self.instance, &self.device, &mut self.data)?;
-        create_pipeline(&self.device, &mut self.data)?;
-        create_framebuffers(&self.device, &mut self.data)?;
+        swapchain::create_swapchain(window, &self.instance, &self.device, &mut self.data)?;
+        swapchain::create_swapchain_image_views(&self.device, &mut self.data)?;
+        renderpass::create_render_pass(&self.instance, &self.device, &mut self.data)?;
+        pipeline::create_pipeline(&self.device, &mut self.data)?;
+        depth_objects::create_depth_objects(&self.instance, &self.device, &mut self.data)?;
+        framebuffers::create_framebuffers(&self.device, &mut self.data)?;
         uniform_buffer::create_uniform_buffers(&self.instance, &self.device, &mut self.data)?;
         uniform_buffer::create_descriptor_pool(&self.device, &mut self.data)?;
         uniform_buffer::create_descriptor_sets(&self.device, &mut self.data)?;
-        create_command_buffers(&self.device, &mut self.data)?;
+        commands::create_command_buffers(&self.device, &mut self.data)?;
         self.data
             .images_in_flight
             .resize(self.data.swapchain_images.len(), vk::Fence::null());
@@ -306,6 +238,9 @@ impl App
 
     unsafe fn destroy_swapchain(&mut self)
     {
+        self.device.destroy_image_view(self.data.depth_image_view, None);
+        self.device.free_memory(self.data.depth_image_memory, None);
+        self.device.destroy_image(self.data.depth_image, None);
         self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
         self.data.uniform_buffers
             .iter()
@@ -332,7 +267,7 @@ impl App
 unsafe fn create_instance(
     window: &Window, 
     entry: &Entry,
-    data: &mut AppData
+    data: &mut appdata::AppData
 ) -> Result<Instance> 
 {
     // Optional Application information
@@ -389,7 +324,7 @@ unsafe fn create_instance(
             vk::DebugUtilsMessageTypeFlagsEXT::GENERAL | 
             vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE
         )
-        .user_callback(Some(debug_callback));
+        .user_callback(Some(debug_callback::debug_callback));
 
     if VALIDATION_ENABLED 
     {
@@ -407,15 +342,13 @@ unsafe fn create_instance(
     Ok(instance)
 }
 
-
-
 // create logical device
 unsafe fn create_logical_device(
     instance: &Instance,
-    data: &mut AppData,
+    data: &mut appdata::AppData,
 ) -> Result<Device> 
 {
-    let indices = QueueFamilyIndices::get(instance, data, data.physical_device)?;
+    let indices = queue_family_indices::QueueFamilyIndices::get(instance, data, data.physical_device)?;
 
     let mut unique_indices = HashSet::new();
     unique_indices.insert(indices.graphics);
@@ -440,7 +373,7 @@ unsafe fn create_logical_device(
         vec![]
     };
 
-    let extensions = DEVICE_EXTENSIONS
+    let extensions = physical_device::DEVICE_EXTENSIONS
         .iter()
         .map(|n| n.as_ptr())
         .collect::<Vec<_>>();
