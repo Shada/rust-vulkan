@@ -1,3 +1,4 @@
 /target
 *.spv
 *.o
+*.lock
