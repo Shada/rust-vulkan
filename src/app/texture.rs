@@ -12,7 +12,7 @@ pub unsafe fn create_texture_image(
     data: &mut AppData,
 ) -> Result <()> 
 {
-    let image = File::open("assets/textures/texture.png")?;
+    let image = File::open("assets/models/viking_room.png")?;
 
     let decoder = png::Decoder::new(image);
     let mut reader = decoder.read_info()?;

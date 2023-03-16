@@ -2,7 +2,7 @@ use std::mem::size_of;
 use std::ptr::copy_nonoverlapping as memcpy;
 
 use nalgebra_glm as glm;
-use lazy_static::lazy_static;
+
 use vulkanalia::prelude::v1_0::*;
 
 use super::appdata::AppData;
@@ -11,34 +11,14 @@ use anyhow::{Result, anyhow};
 
 use super::buffer::*;
 
-lazy_static!
-{
-    pub static ref VERTICES: Vec<Vertex> = vec!
-    [
-        Vertex::new(glm::vec3(-0.5, -0.5, 0.0),  glm::vec3(1.0, 0.0, 0.0), glm::vec2(1.0, 0.0)),
-        Vertex::new(glm::vec3(0.5,  -0.5, 0.0),  glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 0.0)),
-        Vertex::new(glm::vec3(0.5, 0.5, 0.0),    glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
-        Vertex::new(glm::vec3(-0.5, 0.5, 0.0),   glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
-
-        Vertex::new(glm::vec3(-0.5, -0.5, -0.5),  glm::vec3(1.0, 0.0, 0.0), glm::vec2(1.0, 0.0)),
-        Vertex::new(glm::vec3(0.5,  -0.5, -0.5),  glm::vec3(0.0, 1.0, 0.0), glm::vec2(0.0, 0.0)),
-        Vertex::new(glm::vec3(0.5, 0.5, -0.5),    glm::vec3(0.0, 0.0, 1.0), glm::vec2(0.0, 1.0)),
-        Vertex::new(glm::vec3(-0.5, 0.5, -0.5),   glm::vec3(1.0, 1.0, 1.0), glm::vec2(1.0, 1.0)),
-    ];
-}
-
-pub const INDICES: &[u16] = &[
-    0, 1, 2, 2, 3, 0,
-    4, 5, 6, 6, 7, 4
-    ];
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex
 {
-    position: glm::Vec3,
-    colour: glm::Vec3,
-    tex_coord: glm::Vec2,
+    pub position: glm::Vec3,
+    pub colour: glm::Vec3,
+    pub tex_coord: glm::Vec2,
 }
 
 impl Vertex
@@ -98,7 +78,7 @@ pub unsafe fn create_vertex_buffer(
 {
     // Create Staging buffer
 
-    let size = (size_of::<Vertex>() * VERTICES.len()) as u64;
+    let size = (size_of::<Vertex>() * data.vertices.len()) as u64;
 
     let (staging_buffer, staging_buffer_memory) = create_buffer(
         instance, 
@@ -117,7 +97,7 @@ pub unsafe fn create_vertex_buffer(
         vk::MemoryMapFlags::empty(),
     )?;
 
-    memcpy(VERTICES.as_ptr(), memory.cast(), VERTICES.len());
+    memcpy(data.vertices.as_ptr(), memory.cast(), data.vertices.len());
 
     device.unmap_memory(staging_buffer_memory);
 
@@ -156,7 +136,7 @@ pub unsafe fn create_index_buffer(
 {
     // Create Staging buffer
 
-    let size = (size_of::<u16>() * INDICES.len()) as u64;
+    let size = (size_of::<u32>() * data.indices.len()) as u64;
 
     let (staging_buffer, staging_buffer_memory) = create_buffer(
         instance, 
@@ -175,7 +155,7 @@ pub unsafe fn create_index_buffer(
         vk::MemoryMapFlags::empty(),
     )?;
 
-    memcpy(INDICES.as_ptr(), memory.cast(), INDICES.len());
+    memcpy(data.indices.as_ptr(), memory.cast(), data.indices.len());
 
     device.unmap_memory(staging_buffer_memory);
 

@@ -2,7 +2,6 @@ use vulkanalia::prelude::v1_0::*;
 
 use super::appdata::AppData;
 use super::queue_family_indices::QueueFamilyIndices;
-use super::vertices::*;
 
 use anyhow::{Result, Ok};
 
@@ -88,7 +87,7 @@ unsafe fn record_command_buffers(
         device.cmd_bind_pipeline(*command_buffer, vk::PipelineBindPoint::GRAPHICS, data.pipeline);
 
         device.cmd_bind_vertex_buffers(*command_buffer, 0, &[data.vertex_buffer], &[0]);
-        device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexType::UINT16);
+        device.cmd_bind_index_buffer(*command_buffer, data.index_buffer, 0, vk::IndexType::UINT32);
 
         device.cmd_bind_descriptor_sets(
             *command_buffer, 
@@ -99,7 +98,7 @@ unsafe fn record_command_buffers(
             &[],
         );
 
-        device.cmd_draw_indexed(*command_buffer, INDICES.len() as u32, 1, 0, 0, 0);
+        device.cmd_draw_indexed(*command_buffer, data.indices.len() as u32, 1, 0, 0, 0);
 
         device.cmd_end_render_pass(*command_buffer);
 

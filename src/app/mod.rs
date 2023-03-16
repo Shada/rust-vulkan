@@ -17,6 +17,7 @@ mod commands;
 mod debug_callback;
 mod depth_objects;
 mod framebuffers;
+mod model;
 mod physical_device;
 mod pipeline;
 mod renderpass;
@@ -77,6 +78,8 @@ impl App
         texture::create_texture_image_view(&device, &mut data)?;
         texture::create_texture_sampler(&device, &mut data)?;
 
+        model::load_model(&mut data)?;
+        
         vertices::create_vertex_buffer(&instance, &device, &mut data)?;
         vertices::create_index_buffer(&instance, &device, &mut data)?;
         uniform_buffer::create_uniform_buffers(&instance, &device, &mut data)?;
