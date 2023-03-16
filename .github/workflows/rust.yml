@@ -15,7 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Checkout submodules
+      uses: textbook/git-checkout-submodule-action@master
+    - name: List directory
+      run: pwd
+    - name: List contents
+      run: ls -la
     - name: Build Shader
       run: ./compile_shaders.sh
     - name: Build
