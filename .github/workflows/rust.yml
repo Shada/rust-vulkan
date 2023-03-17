@@ -19,11 +19,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Checkout submodules
       run: git submodule update --init --recursive
-    - name: List directory
-      run: pwd
-    - name: List contents
-      run: ls -la
-    - name: Build Shader
+    - name: Build Shaders
       run: ./compile_shaders.sh
     - name: Build
       run: cargo build --verbose
