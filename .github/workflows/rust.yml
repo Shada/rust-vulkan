@@ -19,8 +19,6 @@ jobs:
       uses: actions/checkout@v3
     - name: Checkout submodules
       run: git submodule update --init --recursive
-    - name: Insall Podman
-      run: bash .github/install_podman.sh
     - name: Build Shaders
       run: ./compile_shaders.sh
     - name: Build
