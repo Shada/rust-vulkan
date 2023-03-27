@@ -50,6 +50,7 @@ pub unsafe fn create_texture_image(
         width, 
         height, 
         data.mip_levels,
+        vk::SampleCountFlags::_1,
         vk::Format::R8G8B8A8_SRGB, 
         vk::ImageTiling::OPTIMAL, 
         vk::ImageUsageFlags::SAMPLED 
@@ -436,12 +437,15 @@ pub unsafe fn create_image(
     width: u32,
     height: u32,
     mip_levels: u32,
+    samples: vk::SampleCountFlags,
     format: vk::Format,
     tiling: vk::ImageTiling,
     usage: vk::ImageUsageFlags,
     properties: vk::MemoryPropertyFlags,
 ) -> Result<(vk::Image, vk::DeviceMemory)> 
 {
+    // Image 
+
     let create_info = vk::ImageCreateInfo::builder()
         .image_type(vk::ImageType::_2D)
         .extent(vk::Extent3D {
@@ -455,10 +459,12 @@ pub unsafe fn create_image(
         .tiling(tiling)
         .initial_layout(vk::ImageLayout::UNDEFINED)
         .usage(usage)
-        .samples(vk::SampleCountFlags::_1)
+        .samples(samples)
         .sharing_mode(vk::SharingMode::EXCLUSIVE);
 
     let image = device.create_image(&create_info, None)?;
+
+    // Memory 
 
     let requirements = device.get_image_memory_requirements(image);
 

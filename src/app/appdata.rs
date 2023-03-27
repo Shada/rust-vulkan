@@ -10,6 +10,8 @@ pub struct AppData
     pub surface: vk::SurfaceKHR,
     // Physical Device / Logical Device
     pub physical_device: vk::PhysicalDevice,
+    pub msaa_samples: vk::SampleCountFlags,
+    // Queues
     pub graphics_queue: vk::Queue,
     pub present_queue: vk::Queue,
     // Swapchain
@@ -53,8 +55,12 @@ pub struct AppData
     pub texture_image_memory: vk::DeviceMemory,
     pub texture_image_view: vk::ImageView,
     pub texture_sampler: vk::Sampler,
-    // Depth image
+    // Depth
     pub depth_image: vk::Image,
     pub depth_image_memory: vk::DeviceMemory,
-    pub depth_image_view: vk::ImageView, 
+    pub depth_image_view: vk::ImageView,
+    // Colour
+    pub colour_image: vk::Image,
+    pub colour_image_memory: vk::DeviceMemory,
+    pub colour_image_view: vk::ImageView,
 }

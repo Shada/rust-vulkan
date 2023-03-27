@@ -13,6 +13,7 @@ use winit::window::Window;
 
 mod appdata;
 mod buffer;
+mod colour_objects;
 mod commands;
 mod debug_callback;
 mod depth_objects;
@@ -71,6 +72,7 @@ impl App
 
         commands::create_command_pool(&instance, &device, &mut data)?;
         
+        colour_objects::create_colour_objects(&instance, &device, &mut data)?;
         depth_objects::create_depth_objects(&instance, &device, &mut data)?;
         framebuffers::create_framebuffers(&device, &mut data)?;
 
