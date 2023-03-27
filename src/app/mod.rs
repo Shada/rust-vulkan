@@ -229,6 +229,7 @@ impl App
         swapchain::create_swapchain_image_views(&self.device, &mut self.data)?;
         renderpass::create_render_pass(&self.instance, &self.device, &mut self.data)?;
         pipeline::create_pipeline(&self.device, &mut self.data)?;
+        colour_objects::create_colour_objects(&self.instance, &self.device, &mut self.data)?;
         depth_objects::create_depth_objects(&self.instance, &self.device, &mut self.data)?;
         framebuffers::create_framebuffers(&self.device, &mut self.data)?;
         uniform_buffer::create_uniform_buffers(&self.instance, &self.device, &mut self.data)?;
@@ -243,9 +244,14 @@ impl App
 
     unsafe fn destroy_swapchain(&mut self)
     {
+        self.device.destroy_image_view(self.data.colour_image_view, None);
+        self.device.free_memory(self.data.colour_image_memory, None);
+        self.device.destroy_image(self.data.colour_image, None);
+
         self.device.destroy_image_view(self.data.depth_image_view, None);
         self.device.free_memory(self.data.depth_image_memory, None);
         self.device.destroy_image(self.data.depth_image, None);
+
         self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
         self.data.uniform_buffers
             .iter()
@@ -384,7 +390,9 @@ unsafe fn create_logical_device(
         .collect::<Vec<_>>();
 
     let features = vk::PhysicalDeviceFeatures::builder()
-        .sampler_anisotropy(true);
+        .sampler_anisotropy(true)
+        // Enable sample shading feature for the device.
+        .sample_rate_shading(true);
 
     let info = vk::DeviceCreateInfo::builder()
         .queue_create_infos(&queue_infos)

@@ -20,7 +20,7 @@ pub unsafe fn create_depth_objects(
         data.swapchain_extent.width, 
         data.swapchain_extent.height, 
         1,
-        vk::SampleCountFlags::_1,
+        data.msaa_samples,
         format, 
         vk::ImageTiling::OPTIMAL, 
         vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT, 

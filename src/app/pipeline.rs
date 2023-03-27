@@ -67,8 +67,11 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
 
     // Multisample State
     let multisample_state = vk::PipelineMultisampleStateCreateInfo::builder()
-        .sample_shading_enable(false)
-        .rasterization_samples(vk::SampleCountFlags::_1);
+        // Enable sample shading in the pipeline.
+        .sample_shading_enable(true)
+        // Minimum fraction for sample shading; closer to one is smoother.
+        .min_sample_shading(0.2)
+        .rasterization_samples(data.msaa_samples);
 
     //Depth Stencil State
     let depth_stencil_state = vk::PipelineDepthStencilStateCreateInfo::builder()
