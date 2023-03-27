@@ -19,7 +19,7 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Build Shaders
-      run: sudo ./compile_shaders.sh
+      run: ./compile_shaders.sh
     - name: Build
       run: cargo build --verbose
     - name: Run tests
