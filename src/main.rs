@@ -10,12 +10,18 @@ use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
+
 #[rustfmt::skip]
 fn main() -> Result<()> 
 {
+    ::std::env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
 
     // Window
+    warn!("Testing!");
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()

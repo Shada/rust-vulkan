@@ -7,12 +7,13 @@ use anyhow::{anyhow, Result, Ok};
 
 use vulkanalia::prelude::v1_0::*;
 
-use log::*;
 use std::collections::HashSet;
+
+// TODO: check the properties and select the best Device. 
+// TODO: implement configuration options, where the available options is dynamically updated based on selected device
 
 pub unsafe fn pick_physical_device(instance: &Instance, data: &mut AppData) -> Result<()> 
 {
-    
     for physical_device in instance.enumerate_physical_devices()? 
     {
         let properties = instance.get_physical_device_properties(physical_device);
@@ -63,6 +64,24 @@ pub unsafe fn check_physical_device(
     physical_device: vk::PhysicalDevice,
 ) -> Result<()> 
 {
+    let properties = instance
+        .get_physical_device_properties(physical_device);
+    //if properties.device_type != vk::PhysicalDeviceType::DISCRETE_GPU 
+    //{
+    //    return Err(anyhow!(SuitabilityError("Only discrete GPUs are supported.")));
+    //}
+
+    let features = instance
+        .get_physical_device_features(physical_device);
+    //if features.geometry_shader != vk::TRUE 
+    //{
+    //    return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
+    //}
+    if features.sampler_anisotropy != vk::TRUE
+    {
+        return Err(anyhow!(SuitabilityError("No sampler anisotropy!")));
+    }
+
     QueueFamilyIndices::get(instance, data, physical_device)?;
     check_physical_device_extensions(instance, physical_device)?;
 
