@@ -77,6 +77,7 @@ pub unsafe fn check_physical_device(
     //{
     //    return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
     //}
+
     if features.sampler_anisotropy != vk::TRUE
     {
         return Err(anyhow!(SuitabilityError("No sampler anisotropy!")));
@@ -97,18 +98,6 @@ pub unsafe fn check_physical_device(
     {
         return Err(anyhow!(SuitabilityError("No sampler anisotropy!")));
     }
-    //if features.geometry_shader != vk::TRUE 
-    //{
-    //    return Err(anyhow!(SuitabilityError("Missing geometry shader support.")));
-    //}
-
-    // Prefer Discrete GPU
-    //let properties = instance
-    //    .get_physical_device_properties(physical_device);
-    //if properties.device_type != vk::PhysicalDeviceType::DISCRETE_GPU 
-    //{
-    //    return Err(anyhow!(SuitabilityError("Only discrete GPUs are supported.")));
-    //}
     
     Ok(())
 }
