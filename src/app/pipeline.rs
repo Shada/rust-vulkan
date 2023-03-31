@@ -79,6 +79,8 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .depth_write_enable(true)
         .depth_compare_op(vk::CompareOp::LESS)
         .depth_bounds_test_enable(false)
+        .min_depth_bounds(0.0)
+        .max_depth_bounds(1.0)
         .stencil_test_enable(false);
 
     // Color Blend State
@@ -86,7 +88,7 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .color_write_mask(vk::ColorComponentFlags::all())
         .blend_enable(true)
         .src_color_blend_factor(vk::BlendFactor::SRC_ALPHA)
-        .dst_alpha_blend_factor(vk::BlendFactor::ONE_MINUS_SRC_ALPHA)
+        .dst_color_blend_factor(vk::BlendFactor::ONE_MINUS_SRC_ALPHA)
         .color_blend_op(vk::BlendOp::ADD)
         .src_alpha_blend_factor(vk::BlendFactor::ONE)
         .dst_alpha_blend_factor(vk::BlendFactor::ZERO)
@@ -98,6 +100,13 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .logic_op(vk::LogicOp::COPY)
         .attachments(attachments)
         .blend_constants([0.0, 0.0, 0.0, 0.0]);
+
+    let dynamic_states = &[
+        vk::DynamicState::VIEWPORT,
+        vk::DynamicState::LINE_WIDTH,
+    ];
+    let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
+        .dynamic_states(dynamic_states);
 
     let vert_push_constant_range = vk::PushConstantRange::builder()
         .stage_flags(vk::ShaderStageFlags::VERTEX)
