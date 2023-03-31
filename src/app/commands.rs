@@ -112,7 +112,14 @@ unsafe fn record_command_buffers(
             data.pipeline_layout, 
             vk::ShaderStageFlags::VERTEX, 
             0, 
-            model_bytes
+            model_bytes,
+        );
+        device.cmd_push_constants(
+            *command_buffer, 
+            data.pipeline_layout, 
+            vk::ShaderStageFlags::FRAGMENT, 
+            64,
+            &0.25f32.to_ne_bytes()[..],
         );
 
         device.cmd_draw_indexed(*command_buffer, data.indices.len() as u32, 1, 0, 0, 0);

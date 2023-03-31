@@ -14,5 +14,5 @@ layout(push_constant) uniform PushConstants
 
 void main() 
 {
-    out_colour = vec4(texture(tex_sampler, frag_tex_coord).rgb, pcs.opacity);
+    out_colour = vec4(texture(tex_sampler, frag_tex_coord).rgb. pcs.opacity);
 }
