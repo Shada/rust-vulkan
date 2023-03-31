@@ -1,5 +1,7 @@
 use vulkanalia::prelude::v1_0::*;
 
+use nalgebra_glm as glm;
+
 use super::appdata::AppData;
 use super::queue_family_indices::QueueFamilyIndices;
 
@@ -45,6 +47,13 @@ unsafe fn record_command_buffers(
     data: &AppData
 ) -> Result<()> 
 {
+    let model = glm::rotate(
+        &glm::identity(),
+        0.0f32,
+        &glm::vec3(0.0,0.0,1.0),
+    );
+    let (_, model_bytes, _) = model.as_slice().align_to::<u8>();
+
     for (i, command_buffer) in data.command_buffers.iter().enumerate() 
     {
         let inheritence = vk::CommandBufferInheritanceInfo::builder();
@@ -96,6 +105,14 @@ unsafe fn record_command_buffers(
             0, 
             &[data.descriptor_sets[i]], 
             &[],
+        );
+
+        device.cmd_push_constants(
+            *command_buffer, 
+            data.pipeline_layout, 
+            vk::ShaderStageFlags::VERTEX, 
+            0, 
+            model_bytes
         );
 
         device.cmd_draw_indexed(*command_buffer, data.indices.len() as u32, 1, 0, 0, 0);

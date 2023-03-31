@@ -13,7 +13,6 @@ use super::{appdata::AppData, buffer::create_buffer};
 #[derive(Copy, Clone, Debug)]
 pub struct UniformBufferObject
 {
-    pub model: glm::Mat4,
     pub view: glm::Mat4,
     pub proj: glm::Mat4,
 }
@@ -21,12 +20,6 @@ pub struct UniformBufferObject
 pub unsafe fn update_uniform_buffer(image_index: usize, start: &Instant, data: &AppData, device: &Device) -> Result<()>
 {
     let time = start.elapsed().as_secs_f32();
-
-    let model = glm::rotate(
-        &glm::identity(),
-        time * glm::radians(&glm::vec1(90.0))[0],
-        &glm::vec3(0.0,0.0,1.0),
-    );
 
     let view = glm::look_at(
         &glm::vec3(2.0, 2.0, 2.0), 
@@ -42,7 +35,7 @@ pub unsafe fn update_uniform_buffer(image_index: usize, start: &Instant, data: &
     );
     proj[(1, 1)] *= -1.0;
 
-    let ubo = UniformBufferObject { model, view, proj };
+    let ubo = UniformBufferObject { view, proj };
 
     let memory = device.map_memory(
         data.uniform_buffers_memory[image_index], 

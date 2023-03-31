@@ -2,7 +2,7 @@
 
 git submodule update --init --recursive
 
-podman pull shadahub/shaderc || podman build --rm -t shadahub/shaderc -f shaderc/Dockerfile shaderc
+podman pull shadahub/shaderc:latest || podman build --rm -t shadahub/shaderc -f shaderc/Dockerfile shaderc
 
 podman unshare chown $(id -u):$(id -g) -R $PWD/assets/shaders
 

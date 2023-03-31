@@ -107,11 +107,18 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
     ];
     let dynamic_state = vk::PipelineDynamicStateCreateInfo::builder()
         .dynamic_states(dynamic_states);
+
+    let vert_push_constant_range = vk::PushConstantRange::builder()
+        .stage_flags(vk::ShaderStageFlags::VERTEX)
+        .offset(0)
+        .size(64); // size of model matrix
     
     // Layout
     let set_layouts = &[data.descriptor_set_layout];
+    let push_constant_ranges = &[vert_push_constant_range];
     let layout_info = vk::PipelineLayoutCreateInfo::builder()
-        .set_layouts(set_layouts);
+        .set_layouts(set_layouts)
+        .push_constant_ranges(push_constant_ranges);
 
     data.pipeline_layout = device.create_pipeline_layout(&layout_info, None)?;
     

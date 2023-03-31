@@ -21,7 +21,6 @@ fn main() -> Result<()>
     pretty_env_logger::init();
 
     // Window
-    warn!("Testing!");
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
