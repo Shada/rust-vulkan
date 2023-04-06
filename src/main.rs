@@ -7,6 +7,7 @@ use anyhow::Result;
 
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
+use winit::event::{ElementState, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
@@ -49,6 +50,19 @@ fn main() -> Result<()>
                 {
                     minimized = false;
                     app.resized = true;
+                }
+            },
+            // Keyboard Input
+            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } =>
+            {
+                if input.state == ElementState::Pressed
+                {
+                    match input.virtual_keycode
+                    {
+                        Some(VirtualKeyCode::Left) if app.models > 1 => app.models -= 1,
+                        Some(VirtualKeyCode::Right) if app.models < 4 => app.models += 1,
+                        _ => { }
+                    }
                 }
             },
             // Destroy our Vulkan app.
