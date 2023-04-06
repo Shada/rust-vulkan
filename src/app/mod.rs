@@ -70,7 +70,7 @@ impl App
         uniform_buffer::create_descriptor_set_layout(&device, &mut data)?;
         pipeline::create_pipeline(&device, &mut data)?;
 
-        commands::create_command_pool(&instance, &device, &mut data)?;
+        commands::create_command_pools(&instance, &device, &mut data)?;
         
         colour_objects::create_colour_objects(&instance, &device, &mut data)?;
         depth_objects::create_depth_objects(&instance, &device, &mut data)?;
@@ -140,7 +140,7 @@ impl App
         
         let time = self.start.elapsed().as_secs_f32();
 
-        commands::update_command_buffer(&mut self.data, &self.device, image_index, time)?;
+        commands::update_command_buffer(self, image_index, time)?;
         uniform_buffer::update_uniform_buffer(image_index, &self.start, &self.data, &self.device)?;
 
         //Submit command buffer
@@ -172,6 +172,7 @@ impl App
             || result == Err(vk::ErrorCode::OUT_OF_DATE_KHR);
 
         if self.resized || changed {
+            self.resized = false;
             self.recreate_swapchain(window)?;
         } else if let Err(e) = result {
             return Err(anyhow!(e));
@@ -190,29 +191,25 @@ impl App
 
         self.destroy_swapchain();
 
+        self.data.in_flight_fences.iter().for_each(|f| self.device.destroy_fence(*f, None));
+        self.data.render_finished_semaphores.iter().for_each(|s| self.device.destroy_semaphore(*s, None));
+        self.data.image_available_semaphores.iter().for_each(|s| self.device.destroy_semaphore(*s, None));
+        self.data.command_pools.iter().for_each(|p| self.device.destroy_command_pool(*p, None));
+
+        self.device.free_memory(self.data.index_buffer_memory, None);
+        self.device.destroy_buffer(self.data.index_buffer, None);
+        self.device.free_memory(self.data.vertex_buffer_memory, None);
+        self.device.destroy_buffer(self.data.vertex_buffer, None);
+
         self.device.destroy_sampler(self.data.texture_sampler, None);
         self.device.destroy_image_view(self.data.texture_image_view, None);
-        self.device.destroy_image(self.data.texture_image, None);
         self.device.free_memory(self.data.texture_image_memory, None);
+        self.device.destroy_image(self.data.texture_image, None);
+
+        self.device.destroy_command_pool(self.data.command_pool, None);
 
         self.device.destroy_descriptor_set_layout(self.data.descriptor_set_layout, None);
 
-        self.device.destroy_buffer(self.data.index_buffer, None);
-        self.device.free_memory(self.data.index_buffer_memory, None);
-        self.device.destroy_buffer(self.data.vertex_buffer, None);
-        self.device.free_memory(self.data.vertex_buffer_memory, None);
-
-        self.data.in_flight_fences
-            .iter()
-            .for_each(|f| self.device.destroy_fence(*f, None));
-        self.data.render_finished_semaphores
-            .iter()
-            .for_each(|s| self.device.destroy_semaphore(*s, None));
-        self.data.image_available_semaphores
-            .iter()
-            .for_each(|s| self.device.destroy_semaphore(*s, None));
-        self.device.destroy_command_pool(self.data.command_pool, None);
-        
         self.device.destroy_device(None);
         self.instance.destroy_surface_khr(self.data.surface, None);
 
@@ -247,6 +244,10 @@ impl App
 
     unsafe fn destroy_swapchain(&mut self)
     {
+        self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
+        self.data.uniform_buffers_memory.iter().for_each(|m| self.device.free_memory(*m, None));
+        self.data.uniform_buffers.iter().for_each(|b| self.device.destroy_buffer(*b, None));
+
         self.device.destroy_image_view(self.data.colour_image_view, None);
         self.device.free_memory(self.data.colour_image_memory, None);
         self.device.destroy_image(self.data.colour_image, None);
@@ -255,24 +256,11 @@ impl App
         self.device.free_memory(self.data.depth_image_memory, None);
         self.device.destroy_image(self.data.depth_image, None);
 
-        self.device.destroy_descriptor_pool(self.data.descriptor_pool, None);
-        self.data.uniform_buffers
-            .iter()
-            .for_each(|b| self.device.destroy_buffer(*b, None));
-        self.data.uniform_buffers_memory
-            .iter()
-            .for_each(|m| self.device.free_memory(*m, None));
-        
-        self.device.free_command_buffers(self.data.command_pool, &self.data.command_buffers);
-        self.data.framebuffers
-            .iter()
-            .for_each(|f| self.device.destroy_framebuffer(*f, None));
+        self.data.framebuffers.iter().for_each(|f| self.device.destroy_framebuffer(*f, None));
         self.device.destroy_pipeline(self.data.pipeline, None);
         self.device.destroy_pipeline_layout(self.data.pipeline_layout, None);
         self.device.destroy_render_pass(self.data.render_pass, None);
-        self.data.swapchain_image_views
-            .iter()
-            .for_each(|v| self.device.destroy_image_view(*v, None));
+        self.data.swapchain_image_views.iter().for_each(|v| self.device.destroy_image_view(*v, None));
         self.device.destroy_swapchain_khr(self.data.swapchain, None);
     }
 }

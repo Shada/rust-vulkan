@@ -29,13 +29,20 @@ pub struct AppData
     pub framebuffers: Vec<vk::Framebuffer>,
     // Command Pool
     pub command_pool: vk::CommandPool,
-    // Command Buffers
-    pub command_buffers: Vec<vk::CommandBuffer>,
-    // Synchronization
-    pub image_available_semaphores: Vec<vk::Semaphore>,
-    pub render_finished_semaphores: Vec<vk::Semaphore>,
-    pub in_flight_fences: Vec<vk::Fence>,
-    pub images_in_flight: Vec<vk::Fence>,
+    // Colour
+    pub colour_image: vk::Image,
+    pub colour_image_memory: vk::DeviceMemory,
+    pub colour_image_view: vk::ImageView,
+    // Depth
+    pub depth_image: vk::Image,
+    pub depth_image_memory: vk::DeviceMemory,
+    pub depth_image_view: vk::ImageView,
+    // Texture
+    pub mip_levels: u32,
+    pub texture_image: vk::Image,
+    pub texture_image_memory: vk::DeviceMemory,
+    pub texture_image_view: vk::ImageView,
+    pub texture_sampler: vk::Sampler,
     // Model
     pub vertices: Vec<super::vertices::Vertex>,
     pub indices: Vec<u32>,
@@ -49,18 +56,12 @@ pub struct AppData
     // Descriptor
     pub descriptor_pool: vk::DescriptorPool,
     pub descriptor_sets: Vec<vk::DescriptorSet>,
-    // Texture
-    pub mip_levels: u32,
-    pub texture_image: vk::Image,
-    pub texture_image_memory: vk::DeviceMemory,
-    pub texture_image_view: vk::ImageView,
-    pub texture_sampler: vk::Sampler,
-    // Depth
-    pub depth_image: vk::Image,
-    pub depth_image_memory: vk::DeviceMemory,
-    pub depth_image_view: vk::ImageView,
-    // Colour
-    pub colour_image: vk::Image,
-    pub colour_image_memory: vk::DeviceMemory,
-    pub colour_image_view: vk::ImageView,
+    // Per framebuffer Command Pools
+    pub command_pools: Vec<vk::CommandPool>,
+    pub command_buffers: Vec<vk::CommandBuffer>,
+    // Synchronization
+    pub image_available_semaphores: Vec<vk::Semaphore>,
+    pub render_finished_semaphores: Vec<vk::Semaphore>,
+    pub in_flight_fences: Vec<vk::Fence>,
+    pub images_in_flight: Vec<vk::Fence>,
 }
