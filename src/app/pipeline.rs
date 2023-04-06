@@ -86,9 +86,9 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
     // Color Blend State
     let attachment = vk::PipelineColorBlendAttachmentState::builder()
         .color_write_mask(vk::ColorComponentFlags::all())
-        .blend_enable(false)
-        .src_color_blend_factor(vk::BlendFactor::ONE)
-        .dst_alpha_blend_factor(vk::BlendFactor::ZERO)
+        .blend_enable(true)
+        .src_color_blend_factor(vk::BlendFactor::SRC_ALPHA)
+        .dst_color_blend_factor(vk::BlendFactor::ONE_MINUS_SRC_ALPHA)
         .color_blend_op(vk::BlendOp::ADD)
         .src_alpha_blend_factor(vk::BlendFactor::ONE)
         .dst_alpha_blend_factor(vk::BlendFactor::ZERO)
@@ -113,9 +113,14 @@ pub unsafe fn create_pipeline(device: &Device, data: &mut AppData) -> Result<()>
         .offset(0)
         .size(64); // size of model matrix
     
+    let frag_push_constant_range = vk::PushConstantRange::builder()
+        .stage_flags(vk::ShaderStageFlags::FRAGMENT)
+        .offset(64)
+        .size(4);
+
     // Layout
     let set_layouts = &[data.descriptor_set_layout];
-    let push_constant_ranges = &[vert_push_constant_range];
+    let push_constant_ranges = &[vert_push_constant_range, frag_push_constant_range];
     let layout_info = vk::PipelineLayoutCreateInfo::builder()
         .set_layouts(set_layouts)
         .push_constant_ranges(push_constant_ranges);

@@ -7,7 +7,12 @@ layout(location = 0) out vec4 out_colour;
 
 layout(binding = 1) uniform sampler2D tex_sampler;
 
+layout(push_constant) uniform PushConstants
+{
+    layout(offset = 64) float opacity;
+} pcs;
+
 void main() 
 {
-    out_colour = texture(tex_sampler, frag_tex_coord);
+    out_colour = vec4(texture(tex_sampler, frag_tex_coord).rgb, pcs.opacity);
 }

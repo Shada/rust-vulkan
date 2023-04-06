@@ -138,6 +138,9 @@ impl App
 
         self.data.images_in_flight[image_index as usize] = in_flight_fence;
         
+        let time = self.start.elapsed().as_secs_f32();
+
+        commands::update_command_buffer(&mut self.data, &self.device, image_index, time)?;
         uniform_buffer::update_uniform_buffer(image_index, &self.start, &self.data, &self.device)?;
 
         //Submit command buffer
