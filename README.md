@@ -4,7 +4,7 @@ I'm just following the guide at https://kylemayes.github.io/vulkanalia
 
 ## Progress
 
-Finished chapter [34. Multisampling](https://kylemayes.github.io/vulkanalia/quality/multisampling.html)
+Finished chapter [36. Recycling command buffers](https://kylemayes.github.io/vulkanalia/dynamic/secondary_command_buffers.html)
 
 ## Prerequisites
 
