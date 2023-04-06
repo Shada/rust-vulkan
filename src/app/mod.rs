@@ -46,6 +46,7 @@ pub struct App
     frame: usize,
     pub resized: bool,
     start: Instant, 
+    pub models: usize,
 }
 
 impl App 
@@ -101,6 +102,7 @@ impl App
             frame: 0,
             resized: false,
             start: Instant::now(),
+            models: 4,
         })
     }
 
@@ -138,9 +140,7 @@ impl App
 
         self.data.images_in_flight[image_index as usize] = in_flight_fence;
         
-        let time = self.start.elapsed().as_secs_f32();
-
-        commands::update_command_buffer(self, image_index, time)?;
+        commands::update_command_buffer(self, image_index)?;
         uniform_buffer::update_uniform_buffer(image_index, &self.start, &self.data, &self.device)?;
 
         //Submit command buffer

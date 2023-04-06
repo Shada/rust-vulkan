@@ -22,7 +22,7 @@ pub unsafe fn update_uniform_buffer(image_index: usize, start: &Instant, data: &
     let time = start.elapsed().as_secs_f32();
 
     let view = glm::look_at(
-        &glm::vec3(2.0, 2.0, 2.0), 
+        &glm::vec3(6.0, 2.0, 2.0), 
         &glm::vec3(0.0, 0.0, 0.0), 
         &glm::vec3(0.0, 0.0, 1.0),
     );
