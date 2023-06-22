@@ -10,8 +10,8 @@ Finished chapter [37. Secondary command buffers](https://kylemayes.github.io/vul
 
 You need VulkanSDK and rust installed in order to build this project.
 
-You also need git and podman (container tool) to run the `compile_shaders.sh` script.
-You can modify this step to use docker or compile the shaders natively if you like.
+You also need git and docker (container tool) to run the `compile_shaders.sh` script.
+You can modify this step to compile the shaders natively if you like.
 
 ## Instructions
 
